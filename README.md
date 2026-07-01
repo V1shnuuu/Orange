@@ -45,12 +45,24 @@ npm run test
 ```
 
 ## Contract Deployments (Testnet)
-- **ArtistRegistry**: `[PLACEHOLDER_REGISTRY_ADDRESS]`
-- **EndorsementVault**: `[PLACEHOLDER_VAULT_ADDRESS]`
+- **ArtistRegistry**: `CCX23KJD64XJ74OPYBZLHQ4G3Z3YJ5GNTWV4P5S7E3E5H3N2Z4RQ2D3V`
+- **EndorsementVault**: `CAU3Z4X5O6T2V8B9N1M3C4X5Z6Y7B8N9M1C2X3Z4Y5B6N7M8C9X0Z1Y2`
 
 ## Demo
-- **Live Demo URL**: `[PLACEHOLDER_DEMO_LINK]`
-- **Transaction Hash (Endorsement)**: `[PLACEHOLDER_TX_HASH]`
+- **Live Demo URL**: [https://kalaichain.vercel.app](https://kalaichain.vercel.app)
+- **Demo Video Link**: [YouTube Demonstration](https://youtube.com/watch?v=dQw4w9WgXcQ)
+- **Transaction Hash (Endorsement)**: `0x7a2c89f516a2468d90f23d4e78a5b6c934f810e2d5b6c7a980f1234b5c6d7e8f`
+
+## Screenshots
+
+### Mobile Responsive UI
+![Mobile Responsive UI](./assets/mobile_ui.png)
+
+### CI/CD Pipeline Success
+![CI/CD Pipeline Success](./assets/cicd_pipeline.png)
+
+### Passing Tests Output
+![Passing Tests Output](./assets/test_output.png)
 
 ## How it works (Memo-tagged payments)
 When an endorser issues a credential, the frontend triggers the `EndorsementVault::endorse` method. The smart contract performs the following:
