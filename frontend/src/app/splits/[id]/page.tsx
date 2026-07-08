@@ -21,7 +21,7 @@ interface RecipientInfo {
 export default function SplitDetailPage() {
   const params = useParams();
   const splitId = params?.id as string;
-  const { publicKey, isConnected, connect } = useWallet();
+  const { isConnected, connect } = useWallet();
   const { events } = useDistributionEvents(splitId);
   const { txState, execute, reset } = useSorobanContract();
 

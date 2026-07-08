@@ -7,10 +7,9 @@ import type { AppError } from '@/lib/errors';
 vi.mock('motion/react', () => ({
   motion: {
     div: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => {
-      const { _animate, _initial, _exit, _transition, ...rest } = props as Record<string, unknown>;
       const safeProps: Record<string, unknown> = {};
-      for (const [key, value] of Object.entries(rest)) {
-        if (typeof value !== 'object' || value === null) {
+      for (const [key, value] of Object.entries(props)) {
+        if (!['animate', 'initial', 'exit', 'transition', 'whileHover'].includes(key) && (typeof value !== 'object' || value === null)) {
           safeProps[key] = value;
         }
       }

@@ -57,9 +57,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       const { address } = await StellarWalletsKit.fetchAddress();
       setPublicKey(address);
       localStorage.setItem('splitstream_wallet', address);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Wallet connection error:", err);
-      const message = err?.message || (typeof err === 'string' ? err : JSON.stringify(err)) || 'Failed to connect wallet';
+      const message = (err instanceof Error) ? err.message : (typeof err === 'string' ? err : JSON.stringify(err)) || 'Failed to connect wallet';
       if (message.toLowerCase().includes('not') && message.toLowerCase().includes('install')) {
         setError('No Stellar wallet detected. Please install Freighter, xBull, or Albedo.');
       } else {
