@@ -1,7 +1,7 @@
 [workspace]
 members = [
-    "artist-registry",
-    "endorsement-vault"
+    "split-registry",
+    "payment-vault"
 ]
 resolver = "2"
 

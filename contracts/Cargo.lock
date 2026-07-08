@@ -151,13 +151,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "artist-registry"
-version = "0.1.0"
-dependencies = [
- "soroban-sdk",
-]
-
-[[package]]
 name = "autocfg"
 version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -545,14 +538,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "endorsement-vault"
-version = "0.1.0"
-dependencies = [
- "artist-registry",
- "soroban-sdk",
-]
-
-[[package]]
 name = "equivalent"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -900,6 +885,14 @@ name = "paste"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
+
+[[package]]
+name = "payment-vault"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk",
+ "split-registry",
+]
 
 [[package]]
 name = "pin-project-lite"
@@ -1414,6 +1407,13 @@ checksum = "d91ed6c858b01f942cd56b37a94b3e0a1798290327d1236e4d9cf4eaca44d29d"
 dependencies = [
  "base64ct",
  "der",
+]
+
+[[package]]
+name = "split-registry"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk",
 ]
 
 [[package]]
