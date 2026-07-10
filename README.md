@@ -6,6 +6,23 @@ SplitStream lets you create programmable revenue splits that automatically distr
 
 This project is built for the **Stellar Builder Program (Level 3 Orange Belt)**.
 
+## Live Demo
+🚀 **Production Deployment:** [https://orange-ten-lac.vercel.app](https://orange-ten-lac.vercel.app)
+
+## Smart Contract Deployments (Testnet)
+- **Split Registry Contract ID:** `CBL2M5AOADO6IORQRH24JT5SMMQOXRGEVSPYBVKN5VRMUUOED4EE6TPZ`
+- **Payment Vault Contract ID:** `CCDJ4IKHDN4CWWAWB7XIFVM7KFG22KCAKH6V52PZHPQSO5HNO6SCQ5XH`
+
+### Testnet Transaction Report
+Here are 3 successful contract interactions executed on the Stellar Testnet:
+1. **Transaction 1 (register_split):** [`03772834bba545258cc32d035a09a7e7daca67bc204dfff107227a7b25f98a06`](https://stellar.expert/explorer/testnet/tx/03772834bba545258cc32d035a09a7e7daca67bc204dfff107227a7b25f98a06)
+2. **Transaction 2 (register_split):** [`268dd7aa01ddc405c12d4afd3a5ba5d4fa2be03cfdb9be74c0d72603c43e7dfb`](https://stellar.expert/explorer/testnet/tx/268dd7aa01ddc405c12d4afd3a5ba5d4fa2be03cfdb9be74c0d72603c43e7dfb)
+3. **Transaction 3 (register_split):** [`0004df6e51383b149347a779c5cd95b8c372300ab48a7ee8eba892b302d197fe`](https://stellar.expert/explorer/testnet/tx/0004df6e51383b149347a779c5cd95b8c372300ab48a7ee8eba892b302d197fe)
+
+### Testnet Dashboards
+- **Split Registry Contract:** [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CBL2M5AOADO6IORQRH24JT5SMMQOXRGEVSPYBVKN5VRMUUOED4EE6TPZ)
+- **Payment Vault Contract:** [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CCDJ4IKHDN4CWWAWB7XIFVM7KFG22KCAKH6V52PZHPQSO5HNO6SCQ5XH)
+
 ## Project Structure
 
 This repository is organized into a full-stack monorepo:
