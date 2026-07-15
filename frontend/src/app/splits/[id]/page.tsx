@@ -6,10 +6,11 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useWallet } from '@/components/WalletProvider';
 import { useDistributionEvents } from '@/hooks/useDistributionEvents';
 import { useSorobanContract } from '@/hooks/useSorobanContract';
+import { useClipboard } from '@/hooks/useClipboard';
 import TransactionStatusCard from '@/components/TransactionStatusCard';
 import ErrorBanner from '@/components/ErrorBanner';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
-import { truncateAddress, formatTimestamp } from '@/lib/stellar';
+import { truncateAddress, formatTimestamp, formatRelativeTime } from '@/lib/stellar';
 import type { AppError } from '@/lib/errors';
 
 interface RecipientInfo {
@@ -24,6 +25,7 @@ export default function SplitDetailPage() {
   const { isConnected, connect } = useWallet();
   const { events } = useDistributionEvents(splitId);
   const { txState, execute, reset } = useSorobanContract();
+  const { copied: addressCopied, copy: copyAddress } = useClipboard({ timeout: 1500 });
 
   const [isLoading, setIsLoading] = useState(true);
   const [owner, setOwner] = useState('');
@@ -108,9 +110,18 @@ export default function SplitDetailPage() {
         <div className="divide-y divide-border">
           {recipients.map((r, i) => (
             <div key={i} className="px-5 py-3 flex items-center justify-between">
-              <div>
-                <span className="font-mono text-xs text-text-primary">{truncateAddress(r.address, 8)}</span>
-              </div>
+              <button
+                onClick={() => copyAddress(r.address)}
+                title="Copy address"
+                className="flex items-center gap-1.5 group text-left"
+              >
+                <span className="font-mono text-xs text-text-primary group-hover:text-accent transition-colors">
+                  {truncateAddress(r.address, 8)}
+                </span>
+                <span className="text-xs text-text-muted group-hover:text-accent transition-colors">
+                  {addressCopied ? '✓' : '⎘'}
+                </span>
+              </button>
               <div className="flex items-center gap-4 text-right">
                 <span className="text-sm font-mono text-accent">{r.share}%</span>
                 <span className="text-sm font-mono text-text-secondary">${r.lastReceived}</span>
@@ -213,7 +224,9 @@ export default function SplitDetailPage() {
               >
                 <div>
                   <span className="text-xs font-mono text-text-secondary">{event.sender}</span>
-                  <span className="text-xs text-text-muted ml-2">{formatTimestamp(event.timestamp)}</span>
+                  <span className="text-xs text-text-muted ml-2" title={formatTimestamp(event.timestamp)}>
+                    {formatRelativeTime(event.timestamp)}
+                  </span>
                 </div>
                 <span className="font-mono text-sm font-medium text-accent">${event.totalAmount}</span>
               </button>
