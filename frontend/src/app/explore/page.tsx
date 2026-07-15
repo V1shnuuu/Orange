@@ -3,9 +3,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { motion } from 'motion/react';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
 import EmptyState from '@/components/EmptyState';
+import Card from '@/components/Card';
 import { useDebounce } from '@/hooks/useDebounce';
 import { truncateAddress } from '@/lib/stellar';
 
@@ -94,15 +94,16 @@ export default function ExplorePage() {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {displayed.map((split, i) => (
-            <motion.div
+            <Card
               key={split.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
+              animate
+              delay={i * 0.05}
+              hoverable
+              className="!p-0"
             >
               <Link
                 href={`/splits/${split.id}`}
-                className="block p-5 bg-bg-card border border-border rounded-xl hover:border-accent/30 transition-all group"
+                className="block p-5"
               >
                 <h3 className="font-mono text-sm font-semibold text-text-primary group-hover:text-accent transition-colors mb-3">
                   {split.id}
@@ -122,7 +123,7 @@ export default function ExplorePage() {
                   </div>
                 </div>
               </Link>
-            </motion.div>
+            </Card>
           ))}
         </div>
       )}
