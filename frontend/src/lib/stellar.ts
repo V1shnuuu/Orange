@@ -54,3 +54,20 @@ export function formatTimestamp(timestamp: number): string {
     minute: '2-digit',
   });
 }
+
+// Format timestamp as human-friendly relative time (e.g. "2 min ago")
+export function formatRelativeTime(timestamp: number): string {
+  const diffSeconds = Math.floor(Date.now() / 1000) - timestamp;
+
+  if (diffSeconds < 60) return 'just now';
+  if (diffSeconds < 3600) {
+    const mins = Math.floor(diffSeconds / 60);
+    return `${mins} min ago`;
+  }
+  if (diffSeconds < 86400) {
+    const hours = Math.floor(diffSeconds / 3600);
+    return `${hours}h ago`;
+  }
+  const days = Math.floor(diffSeconds / 86400);
+  return `${days}d ago`;
+}
