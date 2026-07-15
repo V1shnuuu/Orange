@@ -67,6 +67,16 @@ export function stellarExpertContractUrl(contractId: string): string {
   return `https://stellar.expert/explorer/${NETWORK}/contract/${contractId}`;
 }
 
+// Build Stellar Expert URL for an account
+export function stellarExpertAccountUrl(accountId: string): string {
+  return `https://stellar.expert/explorer/${NETWORK}/account/${accountId}`;
+}
+
+// Returns true when the app is configured to run on Stellar mainnet
+export function isMainnet(): boolean {
+  return NETWORK === 'mainnet' || NETWORK === 'public';
+}
+
 // Format timestamp
 export function formatTimestamp(timestamp: number): string {
   return new Date(timestamp * 1000).toLocaleString('en-US', {
