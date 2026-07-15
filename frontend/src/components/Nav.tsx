@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import WalletButton from './WalletButton';
+import NetworkBadge from './NetworkBadge';
 
 const NAV_LINKS = [
   { href: '/splits', label: 'My Splits' },
@@ -48,6 +49,7 @@ export default function Nav() {
 
         {/* Wallet + Mobile toggle */}
         <div className="flex items-center gap-3">
+          <span className="hidden md:block"><NetworkBadge /></span>
           <WalletButton />
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
