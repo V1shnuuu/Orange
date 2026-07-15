@@ -7,7 +7,7 @@ import { useWallet } from '@/components/WalletProvider';
 import TransactionStatusCard from '@/components/TransactionStatusCard';
 import ErrorBanner from '@/components/ErrorBanner';
 import { useSorobanContract } from '@/hooks/useSorobanContract';
-import { truncateAddress } from '@/lib/stellar';
+import { truncateAddress, validateStellarAddress } from '@/lib/stellar';
 import type { AppError } from '@/lib/errors';
 
 interface Recipient {
@@ -31,7 +31,7 @@ export default function CreateSplitPage() {
 
   const totalShares = recipients.reduce((sum, r) => sum + (r.share || 0), 0);
   const sharesValid = totalShares === 100;
-  const allAddressesFilled = recipients.every((r) => r.address.startsWith('G') && r.address.length >= 10);
+  const allAddressesFilled = recipients.every((r) => validateStellarAddress(r.address).valid);
   const formValid = splitId.length > 0 && sharesValid && allAddressesFilled && recipients.length >= 1 && recipients.length <= 10;
 
   const addRecipient = () => {
@@ -159,8 +159,22 @@ export default function CreateSplitPage() {
                         value={r.address}
                         onChange={(e) => updateRecipient(i, 'address', e.target.value)}
                         placeholder="G... (Stellar address)"
-                        className="font-mono text-sm"
+                        className={`font-mono text-sm ${
+                          r.address && !validateStellarAddress(r.address).valid
+                            ? 'border-error/50 focus:border-error'
+                            : r.address && validateStellarAddress(r.address).valid
+                            ? 'border-success/50'
+                            : ''
+                        }`}
                       />
+                      {r.address && !validateStellarAddress(r.address).valid && (
+                        <p className="text-xs text-error mt-1">
+                          {validateStellarAddress(r.address).error}
+                        </p>
+                      )}
+                      {r.address && validateStellarAddress(r.address).valid && (
+                        <p className="text-xs text-success mt-1">✓ Valid address</p>
+                      )}
                     </div>
                     <div className="w-24">
                       <input
