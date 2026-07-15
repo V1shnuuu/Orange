@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { DistributionEvent } from '@/lib/contracts';
+import { useInterval } from './useInterval';
 
 const POLL_INTERVAL = 4000; // 4 seconds
 
@@ -9,7 +10,6 @@ const POLL_INTERVAL = 4000; // 4 seconds
 export function useDistributionEvents(splitId?: string) {
   const [events, setEvents] = useState<DistributionEvent[]>([]);
   const [isPolling, setIsPolling] = useState(false);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const poll = useCallback(async () => {
     setIsPolling(true);
@@ -93,16 +93,9 @@ export function useDistributionEvents(splitId?: string) {
   useEffect(() => {
     // Initial fetch
     setTimeout(() => poll(), 0);
-
-    // Start polling
-    intervalRef.current = setInterval(poll, POLL_INTERVAL);
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
   }, [poll]);
+
+  useInterval(poll, POLL_INTERVAL);
 
   return { events, isPolling, poll };
 }
