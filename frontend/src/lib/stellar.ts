@@ -45,6 +45,18 @@ export function toStroops(amount: string | number): bigint {
   return BigInt(Math.floor(Number(amount) * 10_000_000));
 }
 
+// Format a USDC display amount with $ prefix and locale separators
+// Accepts a string like "1200.50" or a number and produces "$1,200.50"
+export function formatUSDC(amount: string | number, withPrefix: boolean = true): string {
+  const num = typeof amount === 'string' ? parseFloat(amount.replace(/,/g, '')) : amount;
+  if (isNaN(num)) return withPrefix ? '$0.00' : '0.00';
+  const formatted = num.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return withPrefix ? `$${formatted}` : formatted;
+}
+
 // Build Stellar Expert URL for a transaction
 export function stellarExpertTxUrl(txHash: string): string {
   return `https://stellar.expert/explorer/${NETWORK}/tx/${txHash}`;
