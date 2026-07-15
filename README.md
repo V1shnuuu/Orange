@@ -7,7 +7,8 @@ SplitStream lets you create programmable revenue splits that automatically distr
 This project is built for the **Stellar Builder Program (Level 3 Orange Belt)**.
 
 ## Live Demo
-🚀 **Production Deployment:** [https://orange-ten-lac.vercel.app](https://orange-ten-lac.vercel.app)
+🚀 **Production Deployment:** [https://orange-ten-lac.vercel.app](https://orange-ten-lac.vercel.app)  
+🎥 **Demo Video:** [Google Drive Video](https://drive.google.com/file/d/1pkA1Cpa1PtkvdjZlaERbgDtNPEtjLhTn/view?usp=sharing)
 
 ## Smart Contract Deployments (Testnet)
 - **Split Registry Contract ID:** `CBL2M5AOADO6IORQRH24JT5SMMQOXRGEVSPYBVKN5VRMUUOED4EE6TPZ`
