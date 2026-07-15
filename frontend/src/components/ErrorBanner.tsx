@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import type { AppError } from '@/lib/errors';
+import Button from '@/components/Button';
 
 interface ErrorBannerProps {
   error: AppError;
@@ -56,12 +57,13 @@ export default function ErrorBanner({ error, onDismiss, onRetry }: ErrorBannerPr
                   </a>
                 ))}
               </div>
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => { setShowModal(false); onDismiss?.(); }}
-                className="mt-4 w-full btn-secondary text-sm"
+                className="mt-4 w-full"
               >
                 Close
-              </button>
+              </Button>
             </motion.div>
           </motion.div>
         )}
