@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
 import EmptyState from '@/components/EmptyState';
+import { useDebounce } from '@/hooks/useDebounce';
 import { truncateAddress } from '@/lib/stellar';
 
 interface ExploreSplit {
@@ -24,6 +25,7 @@ export default function ExplorePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('distributed');
+  const debouncedSearch = useDebounce(search, 300);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -42,14 +44,14 @@ export default function ExplorePage() {
 
   const displayed = useMemo(() => {
     const filtered = splits.filter((s) =>
-      s.id.toLowerCase().includes(search.toLowerCase())
+      s.id.toLowerCase().includes(debouncedSearch.toLowerCase())
     );
     return [...filtered].sort((a, b) => {
       if (sortKey === 'distributed') return b.totalDistributedRaw - a.totalDistributedRaw;
       if (sortKey === 'recipients') return b.recipientCount - a.recipientCount;
       return a.id.localeCompare(b.id);
     });
-  }, [splits, search, sortKey]);
+  }, [splits, debouncedSearch, sortKey]);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
