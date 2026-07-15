@@ -66,6 +66,22 @@ The frontend is a modern web application built with:
 - Stellar Wallets Kit (Freighter, xBull, Albedo support)
 - Vitest + Testing Library
 
+### Core Custom Hooks
+To ensure performance, responsiveness, and clean state synchronization, the project uses several custom hooks:
+- **`useInterval`**: A declarative, React-friendly interval hook for scheduling periodic background execution (e.g. event polling).
+- **`useThrottle`**: Rates-limits value updates to once every specified interval (with trailing edge updates), optimizing heavy UI events.
+- **`useDebounce`**: Delays updates to state values until user input ceases (essential for real-time search filtering).
+- **`usePrevious`**: Tracks the value of a prop or state from the previous render cycle.
+- **`useMediaQuery`**: Easily checks CSS media queries inside React logic to support dynamic viewport adjustments.
+- **`useToast`**: A robust notification dispatcher to trigger success, error, info, or warning alerts.
+- **`useLocalStorage`**: Safely reads/writes state to localStorage with multi-tab/cross-tab synchronization.
+
+### Reusable UI Components
+- **`Button`**: A design-system compliant button supporting loading states, different size variations, and disability states.
+- **`Card`**: Structured containers implementing smooth hover transitions and custom header/body layouts.
+- **`Toast` & `ToastContainer`**: An animated notification popup system displaying real-time feedback with slide-in effects and automatic dismiss timers.
+- **`LoadingSkeleton` & `LoadingTransition`**: Layout skeleton loaders and full page route-level transition screens for visual continuity.
+
 ### Running Locally
 
 ```bash
@@ -82,7 +98,7 @@ Navigate to [http://localhost:3000](http://localhost:3000) to view the applicati
 
 ### Running Tests
 
-The frontend features a comprehensive Vitest suite covering UI components and hooks.
+The frontend features a comprehensive Vitest suite covering UI components, hooks, and Stellar utilities.
 
 ```bash
 cd frontend
@@ -95,7 +111,7 @@ npm run type-check
 A complete GitHub Actions workflow is provided in `.github/workflows/ci.yml`. It runs automatically on every push and pull request, executing:
 1. Soroban contract tests
 2. Frontend linting
-3. Frontend unit tests
+3. Frontend unit tests (Vitest coverage includes Stellar libs, custom hooks, and layout components)
 4. Typescript type-checking
 
 ## Design
