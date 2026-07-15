@@ -21,6 +21,16 @@ export function truncateAddress(address: string, chars: number = 4): string {
   return `${address.slice(0, chars)}...${address.slice(-chars)}`;
 }
 
+// Validate a Stellar public key (G... address)
+// Checks: G prefix, 56 character length, valid base32 alphabet (A-Z 2-7)
+export function validateStellarAddress(address: string): { valid: boolean; error?: string } {
+  if (!address) return { valid: false, error: 'Address is required' };
+  if (!address.startsWith('G')) return { valid: false, error: 'Stellar addresses must start with G' };
+  if (address.length !== 56) return { valid: false, error: `Address must be 56 characters (got ${address.length})` };
+  if (!/^[A-Z2-7]+$/.test(address)) return { valid: false, error: 'Address contains invalid characters' };
+  return { valid: true };
+}
+
 // Format stroops to human readable USDC amount
 export function formatAmount(stroops: bigint | number | string): string {
   const amount = Number(stroops) / 10_000_000;
