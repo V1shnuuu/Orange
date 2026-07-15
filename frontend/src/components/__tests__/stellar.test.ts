@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { validateStellarAddress, formatRelativeTime, truncateAddress } from '@/lib/stellar';
+import {
+  validateStellarAddress,
+  formatRelativeTime,
+  truncateAddress,
+  formatAmount,
+  formatUSDC,
+  toStroops,
+} from '@/lib/stellar';
 
 // A valid 56-char G-address using only A-Z 2-7
 const VALID_ADDRESS = 'GBZX4TKKRMQNFTO2HKPXS4TH6HNCQB7V3CDOGJZ4UQXPBRZ7D7OKKM';
@@ -70,5 +77,56 @@ describe('truncateAddress', () => {
 
   it('returns empty string for falsy input', () => {
     expect(truncateAddress('')).toBe('');
+  });
+});
+
+describe('formatAmount', () => {
+  it('converts stroops to a human-readable USDC string', () => {
+    expect(formatAmount(10_000_000)).toBe('1.00');
+  });
+
+  it('formats fractional amounts correctly', () => {
+    expect(formatAmount(1_234_567)).toBe('0.1234567');
+  });
+
+  it('handles zero', () => {
+    expect(formatAmount(0)).toBe('0.00');
+  });
+
+  it('accepts bigint stroops', () => {
+    expect(formatAmount(BigInt(100_000_000))).toBe('10.00');
+  });
+});
+
+describe('formatUSDC', () => {
+  it('formats a number with $ prefix by default', () => {
+    expect(formatUSDC(1234.5)).toBe('$1,234.50');
+  });
+
+  it('omits the prefix when withPrefix is false', () => {
+    expect(formatUSDC(1234.5, false)).toBe('1,234.50');
+  });
+
+  it('returns $0.00 for NaN input', () => {
+    expect(formatUSDC('not-a-number')).toBe('$0.00');
+  });
+
+  it('strips commas from a string input before parsing', () => {
+    expect(formatUSDC('1,000.00')).toBe('$1,000.00');
+  });
+});
+
+describe('toStroops', () => {
+  it('converts 1 USDC to 10_000_000 stroops', () => {
+    expect(toStroops(1)).toBe(BigInt(10_000_000));
+  });
+
+  it('floors fractional stroops', () => {
+    // 0.1234567_8 USDC => 1_234_567.8 stroops, floored to 1_234_567
+    expect(toStroops('0.12345678')).toBe(BigInt(1_234_567));
+  });
+
+  it('converts zero', () => {
+    expect(toStroops(0)).toBe(BigInt(0));
   });
 });
