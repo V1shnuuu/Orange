@@ -1,7 +1,10 @@
 [workspace]
 members = [
     "split-registry",
-    "payment-vault"
+    "payment-vault",
+    "circle-factory",
+    "circle-core",
+    "reputation-registry"
 ]
 resolver = "2"
 
