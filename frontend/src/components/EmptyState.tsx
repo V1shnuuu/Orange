@@ -7,32 +7,38 @@ interface EmptyStateProps {
   title: string;
   description?: string;
   action?: {
-    label: string;
-    onClick: () => void;
-  };
+  description: string;
+  action?: React.ReactNode;
+  icon?: string;
 }
 
-/**
- * Generic empty state for lists, search results, and data views.
- * Accepts an optional action button to guide the user to a next step.
- */
-export default function EmptyState({ icon = '🔍', title, description, action }: EmptyStateProps) {
+export default function EmptyState({ title, description, action, icon }: EmptyStateProps) {
   return (
-    <motion.div
+    <motion.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="text-center py-16 px-4 bg-bg-card border border-border rounded-xl"
+      className="flex flex-col items-center justify-center py-20 px-4 text-center border border-dashed border-border rounded-2xl bg-bg-card/50"
     >
-      <span className="text-4xl mb-4 block">{icon}</span>
-      <h3 className="text-base font-semibold text-text-primary mb-2">{title}</h3>
-      {description && (
-        <p className="text-sm text-text-secondary max-w-xs mx-auto mb-6">{description}</p>
-      )}
-      {action && (
-        <button onClick={action.onClick} className="btn-primary text-sm">
-          {action.label}
-        </button>
-      )}
+      {/* Visual illustration element */}
+      <div className="relative w-24 h-24 mb-6 flex items-center justify-center">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+          className="absolute inset-0 border border-dashed border-border rounded-full"
+        />
+        <motion.div
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute inset-2 bg-accent/5 rounded-full blur-xl"
+        />
+        <div className="relative text-4xl">{icon || '✨'}</div>
+      </div>
+      
+      <h3 className="text-xl font-semibold text-text-primary mb-2">{title}</h3>
+      <p className="text-text-secondary max-w-sm mb-8 leading-relaxed text-sm">
+        {description}
+      </p>
+      {action && <div>{action}</div>}
     </motion.div>
   );
 }
