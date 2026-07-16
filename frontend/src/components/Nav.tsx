@@ -7,7 +7,9 @@ import WalletButton from './WalletButton';
 import NetworkBadge from './NetworkBadge';
 
 const NAV_LINKS = [
-  { href: '/splits', label: 'My Splits' },
+  { href: '/circles', label: 'Circles' },
+  { href: '/splits', label: 'Splits' },
+  { href: '/analytics', label: 'Analytics' },
   { href: '/explore', label: 'Explore' },
 ];
 
@@ -22,11 +24,12 @@ export default function Nav() {
         <Link href="/" className="flex items-center gap-2 group">
           <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/30 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M2 8h4l2-4 2 8 2-4h4" stroke="#00C9B1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="8" cy="8" r="6" stroke="#00C9B1" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="4 2" />
+              <circle cx="8" cy="8" r="3" fill="#00C9B1" />
             </svg>
           </div>
           <span className="text-lg font-semibold text-text-primary tracking-tight">
-            Split<span className="text-accent">Stream</span>
+            Circle<span className="text-accent">Pact</span>
           </span>
         </Link>
 
