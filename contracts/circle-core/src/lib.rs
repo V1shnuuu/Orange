@@ -168,8 +168,9 @@ impl CircleCoreContract {
         env.events().publish((symbol_short!("contrib"), member.clone()), amount);
 
         // Check for payout
-        if cycle_info.contributions_this_cycle == cycle_info.max_cycles {
-            Self::execute_payout(&env, &mut cycle_info, amount * cycle_info.max_cycles as i128)?;
+        let max_cycles = cycle_info.max_cycles;
+        if cycle_info.contributions_this_cycle == max_cycles {
+            Self::execute_payout(&env, &mut cycle_info, amount * max_cycles as i128)?;
         } else {
             env.storage().instance().set(&DataKey::CycleInfo, &cycle_info);
         }

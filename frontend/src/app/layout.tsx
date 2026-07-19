@@ -16,11 +16,14 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
+
 export const metadata: Metadata = {
-  title: "SplitStream — Programmable Revenue Sharing on Stellar",
+  title: "CirclePact — Decentralized ROSCA on Stellar",
   description:
-    "One payment. Infinite splits. On-chain. SplitStream lets you create programmable revenue splits that automatically distribute USDC to multiple recipients on the Stellar network.",
-  keywords: ["Stellar", "Soroban", "revenue sharing", "USDC", "smart contracts", "crypto payments"],
+    "CirclePact is a decentralized ROSCA protocol on the Stellar network. Create savings circles, contribute, and build your on-chain reputation.",
+  keywords: ["Stellar", "Soroban", "ROSCA", "savings", "USDC", "smart contracts", "crypto"],
 };
 
 export default function RootLayout({
@@ -38,6 +41,8 @@ export default function RootLayout({
           <Nav />
           <main className="flex-1">{children}</main>
         </WalletProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

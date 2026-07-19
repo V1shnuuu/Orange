@@ -13,8 +13,9 @@
   },
   "dependencies": {
     "@creit.tech/stellar-wallets-kit": "^2.5.0",
-
     "@stellar/stellar-sdk": "^16.0.1",
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "lucide-react": "^1.22.0",
     "motion": "^12.42.2",
     "next": "16.2.9",

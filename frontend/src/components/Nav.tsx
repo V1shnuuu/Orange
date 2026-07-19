@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import WalletButton from './WalletButton';
 import NetworkBadge from './NetworkBadge';
+import FeedbackModal from './FeedbackModal';
 
 const NAV_LINKS = [
   { href: '/circles', label: 'Circles' },
@@ -16,6 +17,7 @@ const NAV_LINKS = [
 export default function Nav() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-bg-primary/80 backdrop-blur-xl">
@@ -52,6 +54,15 @@ export default function Nav() {
 
         {/* Wallet + Mobile toggle */}
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setFeedbackOpen(true)}
+            className="hidden md:flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-text-secondary border border-border rounded-lg hover:text-text-primary hover:border-text-secondary transition-colors"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+            </svg>
+            Feedback
+          </button>
           <span className="hidden md:block"><NetworkBadge /></span>
           <WalletButton />
           <button
@@ -89,8 +100,19 @@ export default function Nav() {
               {link.label}
             </Link>
           ))}
+          <button
+            onClick={() => {
+              setFeedbackOpen(true);
+              setMobileMenuOpen(false);
+            }}
+            className="w-full text-left py-2 text-sm font-medium text-text-secondary hover:text-text-primary"
+          >
+            Feedback
+          </button>
         </div>
       )}
+      
+      <FeedbackModal isOpen={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
     </header>
   );
 }

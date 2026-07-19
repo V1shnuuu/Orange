@@ -37,7 +37,18 @@ export function useCircleContracts() {
       maxMembers: 10,
       currentMembers: 10,
       cycleDurationDays: 30,
-      members: ['GDT...', 'GBX...'],
+      members: [
+        'GDT42G5...M9QZ',
+        'GBX8M2T...L4P1',
+        'GA2P9Q7...R5X8',
+        'GCF1V4B...N9M2',
+        'GBL5K8J...H3T7',
+        'GDP9Z3M...W4R1',
+        'GAT7C2V...B8L9',
+        'GCX4M9N...Q2P5',
+        'GBR1H8F...T7K3',
+        'GDV5B2C...M4Z8'
+      ],
     }
   ]);
 
