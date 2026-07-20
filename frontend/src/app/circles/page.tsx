@@ -9,13 +9,13 @@ export default function CirclesPage() {
   const { circles } = useCircleContracts();
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
+    <div className="container py-16">
+      <div className="flex justify-between items-center mb-12">
         <div>
-          <h1 className="text-3xl font-bold text-text-primary mb-2">Explore Circles</h1>
-          <p className="text-text-secondary">Join an active savings circle and start building reputation.</p>
+          <h1 className="hero-title mb-2">Explore Circles</h1>
+          <p className="text-secondary">Join an active savings circle and start building reputation.</p>
         </div>
-        <Link href="/circles/new" className="btn-primary">
+        <Link href="/circles/new" className="btn btn-primary">
           Create Circle
         </Link>
       </div>

@@ -14,7 +14,7 @@ import { useMemo } from 'react';
 export default function CircleDashboardPage() {
   const params = useParams();
   const id = params.id as string;
-  const { address } = useWallet();
+  const { publicKey: address } = useWallet();
   const { circles, joinCircle, contributeToCircle, txState, resetTxState } = useCircleContracts();
   
   const circle = circles.find(c => c.id === id);
@@ -53,23 +53,23 @@ export default function CircleDashboardPage() {
   const currentPool = BigInt(circle.contributionAmount) * BigInt(2); // Simulated
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="container py-16">
       {txState.status === 'failed' && (
-        <div className="mb-6"><ErrorBanner error={new Error(txState.error)} onDismiss={resetTxState} /></div>
+        <div className="mb-6"><ErrorBanner error={{ message: txState.error || 'Unknown error', type: 'contract_error', retryable: false }} onDismiss={resetTxState} /></div>
       )}
       
       {txState.status !== 'idle' && txState.status !== 'failed' && (
          <div className="mb-8 max-w-md mx-auto">
-           <TransactionStatusCard state={txState} title="Processing Transaction" onReset={resetTxState} />
+           <TransactionStatusCard status={txState.status} hash={txState.hash} error={txState.error} />
          </div>
       )}
 
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Left Column: Stats & Action */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-bg-card border border-border rounded-xl p-6 text-center">
-            <h1 className="text-2xl font-bold text-text-primary mb-1">{circle.name}</h1>
-            <p className="text-sm text-text-secondary mb-6">Cycle 1 of {circle.maxMembers}</p>
+        <div className="flex-col gap-6" style={{ gridColumn: 'span 1' }}>
+          <div className="glass-card text-center mb-6">
+            <h2 className="font-bold mb-2" style={{ fontSize: '24px' }}>{circle.name}</h2>
+            <p className="text-secondary mb-6" style={{ fontSize: '14px' }}>Cycle 1 of {circle.maxMembers}</p>
             
             <div className="flex justify-center mb-6">
               <ProgressRing progress={40} size={160} strokeWidth={10}>
@@ -78,13 +78,13 @@ export default function CircleDashboardPage() {
               </ProgressRing>
             </div>
 
-            <div className="space-y-3 mb-6">
-              <div className="flex justify-between text-sm">
-                <span className="text-text-secondary">Your Contribution</span>
+            <div className="flex-col gap-3 mb-6">
+              <div className="flex justify-between" style={{ fontSize: '14px' }}>
+                <span className="text-secondary">Your Contribution</span>
                 <span className="font-mono font-medium">${formatAmount(BigInt(circle.contributionAmount))}</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-text-secondary">Expected Payout</span>
+              <div className="flex justify-between" style={{ fontSize: '14px' }}>
+                <span className="text-secondary">Expected Payout</span>
                 <span className="font-mono font-bold text-accent">${formatAmount(totalPool)}</span>
               </div>
             </div>
@@ -93,33 +93,33 @@ export default function CircleDashboardPage() {
               <button 
                 onClick={handleJoin} 
                 disabled={isFull} 
-                className={`w-full py-3 rounded-lg font-semibold ${isFull ? 'bg-bg-secondary text-text-secondary' : 'btn-primary'}`}
+                className={`btn w-full ${isFull ? 'btn-secondary' : 'btn-primary'}`}
               >
                 {isFull ? 'Circle Full' : 'Join Circle'}
               </button>
             ) : (
               <button 
                 onClick={handleContribute}
-                className="w-full py-3 rounded-lg font-semibold btn-primary shadow-glow"
+                className="btn btn-primary w-full"
               >
                 Pay Contribution
               </button>
             )}
           </div>
 
-          <div className="bg-bg-card border border-border rounded-xl p-6">
-            <h3 className="font-bold text-text-primary mb-4">Cycle Timeline</h3>
+          <div className="glass-card">
+            <h3 className="font-bold mb-4">Cycle Timeline</h3>
             <Timeline events={timelineEvents} />
           </div>
         </div>
 
         {/* Right Column: Members */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-bg-card border border-border rounded-xl p-6">
+        <div className="flex-col gap-6" style={{ gridColumn: 'span 2' }}>
+          <div className="glass-card">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="font-bold text-text-primary">Members ({circle.currentMembers}/{circle.maxMembers})</h3>
+              <h3 className="font-bold">Members ({circle.currentMembers}/{circle.maxMembers})</h3>
             </div>
-            <div className="space-y-4">
+            <div className="flex-col gap-4">
               {circle.members.map((member, idx) => (
                 <MemberCard 
                   key={member}
@@ -132,8 +132,8 @@ export default function CircleDashboardPage() {
               ))}
               {/* Empty slots */}
               {Array.from({ length: circle.maxMembers - circle.currentMembers }).map((_, i) => (
-                <div key={`empty-${i}`} className="p-4 rounded-xl border border-dashed border-border bg-bg-secondary/30 flex items-center justify-center h-[74px]">
-                  <span className="text-sm text-text-muted">Empty Slot</span>
+                <div key={`empty-${i}`} className="flex items-center justify-center p-4" style={{ borderRadius: '12px', border: '1px dashed var(--border)', background: 'rgba(10, 10, 10, 0.3)', height: '74px' }}>
+                  <span className="text-secondary" style={{ fontSize: '14px' }}>Empty Slot</span>
                 </div>
               ))}
             </div>

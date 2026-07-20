@@ -25,36 +25,36 @@ export default function CircleCard({
 
   return (
     <motion.div
-      whileHover={{ y: -4, borderColor: 'rgba(0, 201, 177, 0.3)' }}
-      className="bg-bg-card border border-border rounded-xl p-5 flex flex-col justify-between transition-all group"
+      whileHover={{ y: -4, borderColor: 'var(--accent)' }}
+      className="glass-card flex flex-col justify-between transition-all group"
     >
       <div>
-        <div className="flex justify-between items-start mb-3">
-          <h3 className="text-lg font-bold text-text-primary group-hover:text-accent transition-colors">{name}</h3>
-          <span className="text-xs font-mono bg-bg-secondary px-2 py-1 rounded-md text-text-secondary">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-bold transition-colors">{name}</h3>
+          <span className="font-mono text-secondary" style={{ fontSize: '12px', background: 'var(--bg-secondary)', padding: '4px 8px', borderRadius: '4px' }}>
             {cycleDurationDays}D
           </span>
         </div>
         
-        <div className="space-y-2 mb-6">
-          <div className="flex justify-between text-sm">
-            <span className="text-text-secondary">Contribution</span>
-            <span className="font-mono font-medium text-text-primary">${formatAmount(BigInt(contributionAmount))}</span>
+        <div className="flex-col gap-2 mb-8">
+          <div className="flex justify-between" style={{ fontSize: '14px' }}>
+            <span className="text-secondary">Contribution</span>
+            <span className="font-mono font-medium">${formatAmount(BigInt(contributionAmount))}</span>
           </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-text-secondary">Total Payout</span>
+          <div className="flex justify-between" style={{ fontSize: '14px' }}>
+            <span className="text-secondary">Total Payout</span>
             <span className="font-mono font-bold text-accent">${formatAmount(BigInt(contributionAmount) * BigInt(maxMembers))}</span>
           </div>
         </div>
 
-        <div className="mb-6">
-          <div className="flex justify-between text-xs mb-1.5">
-            <span className="text-text-secondary">Members</span>
-            <span className="text-text-primary font-medium">{currentMembers} / {maxMembers}</span>
+        <div className="mb-8">
+          <div className="flex justify-between mb-2" style={{ fontSize: '12px' }}>
+            <span className="text-secondary">Members</span>
+            <span className="font-medium">{currentMembers} / {maxMembers}</span>
           </div>
-          <div className="h-1.5 w-full bg-bg-secondary rounded-full overflow-hidden">
+          <div style={{ height: '6px', width: '100%', background: 'var(--bg-secondary)', borderRadius: '100px', overflow: 'hidden' }}>
             <motion.div
-              className={`h-full rounded-full ${isFull ? 'bg-error' : 'bg-accent'}`}
+              style={{ height: '100%', borderRadius: '100px', background: isFull ? 'var(--error)' : 'var(--accent)' }}
               initial={{ width: 0 }}
               animate={{ width: `${progressPercent}%` }}
               transition={{ duration: 1, ease: 'easeOut' }}
@@ -64,9 +64,7 @@ export default function CircleCard({
       </div>
 
       <Link href={`/circles/${id}`} className="block">
-        <button className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-colors ${
-          isFull ? 'bg-bg-secondary text-text-secondary cursor-not-allowed' : 'bg-accent/10 text-accent hover:bg-accent/20'
-        }`} disabled={isFull}>
+        <button className={`btn w-full ${isFull ? 'btn-secondary' : 'btn-primary'}`} style={{ width: '100%' }} disabled={isFull}>
           {isFull ? 'Circle Full' : 'View Circle'}
         </button>
       </Link>

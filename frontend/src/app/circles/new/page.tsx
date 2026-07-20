@@ -23,7 +23,7 @@ export default function CreateCirclePage() {
       const amountInStroops = toStroops(amount);
       const res = await createCircle({
         name,
-        amount: amountInStroops,
+        amount: amountInStroops.toString(),
         maxMembers,
         duration
       });
@@ -41,41 +41,41 @@ export default function CreateCirclePage() {
     return (
       <div className="max-w-md mx-auto mt-20 px-4">
         <TransactionStatusCard
-          state={txState}
-          title="Creating Circle"
-          onReset={resetTxState}
+          status={txState.status}
+          hash={txState.hash}
+          error={txState.error}
         />
       </div>
     );
   }
 
   return (
-    <div className="max-w-xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-text-primary mb-2">Create a Circle</h1>
-      <p className="text-text-secondary mb-8">Set up a new rotating savings circle.</p>
+    <div className="container py-16" style={{ maxWidth: '600px' }}>
+      <h1 className="hero-title mb-4 text-center">Create a Circle</h1>
+      <p className="text-secondary text-center mb-8">Set up a new rotating savings circle.</p>
 
       {txState.status === 'failed' && (
-        <div className="mb-6">
-          <ErrorBanner error={new Error(txState.error)} onDismiss={resetTxState} />
+        <div className="mb-8">
+          <ErrorBanner error={{ message: txState.error || 'Unknown error', type: 'contract_error', retryable: false }} onDismiss={resetTxState} />
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-bg-card border border-border rounded-xl p-6 space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-text-primary mb-2">Circle Name</label>
+      <form onSubmit={handleSubmit} className="glass-card">
+        <div className="form-group">
+          <label className="form-label">Circle Name</label>
           <input
             type="text"
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full bg-bg-secondary border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent transition-colors"
+            className="input-field"
             placeholder="e.g., Alpha Savings Group"
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-text-primary mb-2">Contribution (USDC)</label>
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="form-group">
+            <label className="form-label">Contribution (USDC)</label>
             <input
               type="number"
               required
@@ -83,11 +83,11 @@ export default function CreateCirclePage() {
               step="1"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full bg-bg-secondary border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent transition-colors"
+              className="input-field"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-text-primary mb-2">Max Members</label>
+          <div className="form-group">
+            <label className="form-label">Max Members</label>
             <input
               type="number"
               required
@@ -95,18 +95,18 @@ export default function CreateCirclePage() {
               max="20"
               value={maxMembers}
               onChange={(e) => setMaxMembers(parseInt(e.target.value))}
-              className="w-full bg-bg-secondary border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent transition-colors"
+              className="input-field"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-text-primary mb-2">Cycle Duration</label>
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="form-group">
+            <label className="form-label">Cycle Duration</label>
             <select
               value={duration}
               onChange={(e) => setDuration(parseInt(e.target.value))}
-              className="w-full bg-bg-secondary border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent transition-colors"
+              className="input-field"
             >
               <option value={1}>Daily</option>
               <option value={7}>Weekly</option>
@@ -114,12 +114,12 @@ export default function CreateCirclePage() {
               <option value={30}>Monthly</option>
             </select>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-text-primary mb-2">Payout Order</label>
+          <div className="form-group">
+            <label className="form-label">Payout Order</label>
             <select
               value={payoutOrder}
               onChange={(e) => setPayoutOrder(e.target.value)}
-              className="w-full bg-bg-secondary border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent transition-colors"
+              className="input-field"
             >
               <option value="fixed">Fixed Rotation</option>
               <option value="random" disabled>Random (Soon)</option>
@@ -128,7 +128,7 @@ export default function CreateCirclePage() {
           </div>
         </div>
 
-        <button type="submit" className="w-full btn-primary py-3">
+        <button type="submit" className="btn btn-primary mt-4" style={{ width: '100%' }}>
           Deploy Circle
         </button>
       </form>

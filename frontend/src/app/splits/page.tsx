@@ -39,10 +39,10 @@ export default function SplitsDashboard() {
 
   if (!isConnected) {
     return (
-      <div className="max-w-6xl mx-auto px-4 py-20 text-center">
-        <h1 className="text-2xl font-bold text-text-primary mb-4">My Splits</h1>
-        <p className="text-text-secondary mb-6">Connect your wallet to view and manage your splits.</p>
-        <button onClick={connect} className="btn-primary">
+      <div className="container py-24 text-center">
+        <h1 className="hero-title mb-4">My Splits</h1>
+        <p className="text-secondary mb-6">Connect your wallet to view and manage your splits.</p>
+        <button onClick={connect} className="btn btn-primary">
           Connect Wallet
         </button>
       </div>
@@ -50,15 +50,15 @@ export default function SplitsDashboard() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="container py-16">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">My Splits</h1>
-          <p className="text-sm text-text-secondary mt-1">
+          <h1 className="hero-title mb-2">My Splits</h1>
+          <p className="text-secondary mt-1" style={{ fontSize: '14px' }}>
             Wallet: <span className="font-mono text-accent">{truncateAddress(publicKey || '', 6)}</span>
           </p>
         </div>
-        <Link href="/splits/new" className="btn-primary text-sm">
+        <Link href="/splits/new" className="btn btn-primary">
           + Create New Split
         </Link>
       </div>
@@ -69,14 +69,14 @@ export default function SplitsDashboard() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center py-16 bg-bg-card border border-border rounded-xl"
+          className="text-center py-16 glass-card"
         >
           <p className="text-4xl mb-4">📊</p>
-          <h2 className="text-lg font-semibold text-text-primary mb-2">No splits yet</h2>
-          <p className="text-sm text-text-secondary mb-6">
+          <h2 className="font-semibold mb-2" style={{ fontSize: '18px' }}>No splits yet</h2>
+          <p className="text-secondary mb-6" style={{ fontSize: '14px' }}>
             Create your first split to start distributing payments automatically.
           </p>
-          <Link href="/splits/new" className="btn-primary text-sm">
+          <Link href="/splits/new" className="btn btn-primary">
             Create Your First Split
           </Link>
         </motion.div>
@@ -91,27 +91,28 @@ export default function SplitsDashboard() {
             >
               <Link
                 href={`/splits/${split.id}`}
-                className="block p-5 bg-bg-card border border-border rounded-xl hover:border-accent/30 transition-all group"
+                className="block glass-card group transition-all"
+                style={{ textDecoration: 'none' }}
               >
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div>
-                    <h3 className="text-base font-semibold text-text-primary group-hover:text-accent transition-colors font-mono">
+                    <h3 className="font-semibold font-mono transition-colors group-hover:text-accent mb-1" style={{ fontSize: '16px' }}>
                       {split.id}
                     </h3>
-                    <p className="text-sm text-text-secondary mt-1">
+                    <p className="text-secondary mt-1" style={{ fontSize: '14px' }}>
                       {split.recipientCount} recipients
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-mono font-semibold text-text-primary">
+                    <p className="font-mono font-semibold" style={{ fontSize: '18px' }}>
                       ${split.totalDistributed}
                     </p>
-                    <p className="text-xs text-text-muted">total distributed</p>
+                    <p className="text-secondary" style={{ fontSize: '12px' }}>total distributed</p>
                   </div>
                 </div>
-                <div className="mt-4 flex gap-2">
-                  <span className="btn-primary text-xs !py-1.5 !px-3">Distribute</span>
-                  <span className="btn-secondary text-xs !py-1.5 !px-3">Edit</span>
+                <div className="flex gap-2" style={{ marginTop: '16px' }}>
+                  <span className="btn btn-primary" style={{ padding: '6px 12px', fontSize: '12px' }}>Distribute</span>
+                  <span className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '12px' }}>Edit</span>
                 </div>
               </Link>
             </motion.div>

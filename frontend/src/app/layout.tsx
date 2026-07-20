@@ -36,10 +36,10 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${jetbrainsMono.variable} h-full`}
     >
-      <body className="min-h-full flex flex-col bg-bg-primary text-text-primary antialiased">
+      <body className="app-body">
         <WalletProvider>
           <Nav />
-          <main className="flex-1">{children}</main>
+          <main className="main-content">{children}</main>
         </WalletProvider>
         <Analytics />
         <SpeedInsights />

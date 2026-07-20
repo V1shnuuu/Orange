@@ -84,18 +84,18 @@ export default function CreateSplitPage() {
 
   if (!isConnected) {
     return (
-      <div className="max-w-6xl mx-auto px-4 py-20 text-center">
-        <h1 className="text-2xl font-bold text-text-primary mb-4">Create a Split</h1>
-        <p className="text-text-secondary mb-6">Connect your wallet to create a new revenue split.</p>
-        <button onClick={connect} className="btn-primary">Connect Wallet</button>
+      <div className="container py-24 text-center">
+        <h1 className="hero-title mb-4">Create a Split</h1>
+        <p className="text-secondary mb-8">Connect your wallet to create a new revenue split.</p>
+        <button onClick={connect} className="btn btn-primary">Connect Wallet</button>
       </div>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-text-primary mb-2">Create a Split</h1>
-      <p className="text-sm text-text-secondary mb-8">
+    <div className="container py-16" style={{ maxWidth: '700px' }}>
+      <h1 className="hero-title mb-2 text-center">Create a Split</h1>
+      <p className="text-secondary mb-8 text-center">
         Define how payments will be distributed among recipients.
       </p>
 
@@ -121,8 +121,8 @@ export default function CreateSplitPage() {
             exit={{ opacity: 0, x: -20 }}
           >
             {/* Split ID */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-text-secondary mb-2">
+            <div className="form-group glass-card mb-6">
+              <label className="form-label">
                 Split ID
               </label>
               <input
@@ -130,7 +130,7 @@ export default function CreateSplitPage() {
                 value={splitId}
                 onChange={(e) => validateSplitId(e.target.value)}
                 placeholder="e.g. team_salary"
-                className="font-mono"
+                className="input-field font-mono"
               />
               {splitIdError && (
                 <ErrorBanner
@@ -140,8 +140,8 @@ export default function CreateSplitPage() {
             </div>
 
             {/* Recipients */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-text-secondary mb-3">
+            <div className="form-group glass-card mb-6">
+              <label className="form-label mb-4">
                 Recipients ({recipients.length}/10)
               </label>
               <div className="space-y-3">
@@ -159,7 +159,7 @@ export default function CreateSplitPage() {
                         value={r.address}
                         onChange={(e) => updateRecipient(i, 'address', e.target.value)}
                         placeholder="G... (Stellar address)"
-                        className={`font-mono text-sm ${
+                        className={`input-field font-mono text-sm ${
                           r.address && !validateStellarAddress(r.address).valid
                             ? 'border-error/50 focus:border-error'
                             : r.address && validateStellarAddress(r.address).valid
@@ -184,7 +184,7 @@ export default function CreateSplitPage() {
                         placeholder="%"
                         min="1"
                         max="100"
-                        className="text-center font-mono text-sm"
+                        className="input-field text-center font-mono text-sm"
                       />
                     </div>
                     <button
@@ -251,21 +251,21 @@ export default function CreateSplitPage() {
             exit={{ opacity: 0, x: 20 }}
           >
             {/* Review card */}
-            <div className="bg-bg-card border border-border rounded-xl p-6 mb-6">
-              <h3 className="text-sm font-medium text-text-secondary mb-4">Split Configuration</h3>
+            <div className="glass-card mb-6">
+              <h3 className="form-label mb-4">Split Configuration</h3>
               <div className="mb-4">
-                <p className="text-xs text-text-muted">Split ID</p>
+                <p className="text-secondary" style={{ fontSize: '12px' }}>Split ID</p>
                 <p className="font-mono text-accent">{splitId}</p>
               </div>
               <div className="mb-4">
-                <p className="text-xs text-text-muted">Owner</p>
+                <p className="text-secondary" style={{ fontSize: '12px' }}>Owner</p>
                 <p className="font-mono text-sm">{truncateAddress(publicKey || '', 8)}</p>
               </div>
               <div>
-                <p className="text-xs text-text-muted mb-2">Recipients</p>
-                <div className="space-y-2">
+                <p className="text-secondary mb-2" style={{ fontSize: '12px' }}>Recipients</p>
+                <div className="flex-col gap-2">
                   {recipients.map((r, i) => (
-                    <div key={i} className="flex items-center justify-between p-2 rounded bg-bg-surface">
+                    <div key={i} className="flex items-center justify-between p-3" style={{ background: 'var(--bg-surface)', borderRadius: '8px', marginBottom: '8px' }}>
                       <span className="font-mono text-xs text-text-secondary">{truncateAddress(r.address, 6)}</span>
                       <span className="font-mono text-sm font-medium text-accent">{r.share}%</span>
                     </div>

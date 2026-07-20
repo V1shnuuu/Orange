@@ -12,32 +12,35 @@ interface MemberCardProps {
 
 export default function MemberCard({ address, joinedAt, tier, hasContributed, isCurrentUser }: MemberCardProps) {
   return (
-    <div className={`p-4 rounded-xl border flex items-center justify-between ${
-      isCurrentUser ? 'bg-accent/5 border-accent/20' : 'bg-bg-card border-border'
-    }`}>
+    <div className="flex items-center justify-between p-4 glass-card" style={{
+      borderColor: isCurrentUser ? 'var(--accent)' : 'var(--border)',
+      background: isCurrentUser ? 'rgba(0, 229, 255, 0.05)' : 'var(--bg-card)'
+    }}>
       <div className="flex items-center gap-4">
-        <div className="w-10 h-10 rounded-full bg-bg-secondary flex items-center justify-center text-text-secondary font-mono text-sm border border-border">
+        <div className="flex items-center justify-center font-mono text-secondary" style={{
+          width: '40px', height: '40px', borderRadius: '50%', background: 'var(--bg-secondary)', border: '1px solid var(--border)', fontSize: '14px'
+        }}>
           {address.slice(1, 3)}
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-mono text-sm font-medium text-text-primary">
+            <span className="font-mono font-medium">
               {truncateAddress(address)}
             </span>
             {isCurrentUser && (
-              <span className="text-[10px] uppercase tracking-wider bg-accent/20 text-accent px-1.5 py-0.5 rounded">You</span>
+              <span className="text-accent" style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', background: 'rgba(0, 229, 255, 0.2)', padding: '2px 6px', borderRadius: '4px' }}>You</span>
             )}
           </div>
-          <div className="text-xs text-text-muted mt-1 flex items-center gap-2">
+          <div className="flex items-center gap-2 mt-1 text-secondary" style={{ fontSize: '12px' }}>
             Joined {joinedAt.toLocaleDateString()}
             <ReputationBadge tier={tier} />
           </div>
         </div>
       </div>
       
-      <div className="flex flex-col items-end">
+      <div className="flex-col items-center">
         {hasContributed ? (
-          <span className="text-accent text-sm font-medium flex items-center gap-1">
+          <span className="text-accent font-medium flex items-center gap-2" style={{ fontSize: '14px' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
               <polyline points="22 4 12 14.01 9 11.01"></polyline>
@@ -45,7 +48,7 @@ export default function MemberCard({ address, joinedAt, tier, hasContributed, is
             Contributed
           </span>
         ) : (
-          <span className="text-text-secondary text-sm flex items-center gap-1">
+          <span className="text-secondary flex items-center gap-2" style={{ fontSize: '14px' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10"></circle>
               <polyline points="12 6 12 12 16 14"></polyline>

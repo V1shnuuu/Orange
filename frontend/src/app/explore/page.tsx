@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
 import EmptyState from '@/components/EmptyState';
 import Card from '@/components/Card';
+import Button from '@/components/Button';
 import { useDebounce } from '@/hooks/useDebounce';
 import { truncateAddress } from '@/lib/stellar';
 
@@ -54,27 +55,27 @@ export default function ExplorePage() {
   }, [splits, debouncedSearch, sortKey]);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="container py-16">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-text-primary mb-2">Explore Splits</h1>
-        <p className="text-sm text-text-secondary">
+        <h1 className="hero-title mb-2">Explore Splits</h1>
+        <p className="text-secondary">
           Browse all registered payment splits on the Stellar network.
         </p>
       </div>
 
       {/* Search + Sort toolbar */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+      <div className="flex flex-col md:flex-row gap-4 mb-8">
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by split ID..."
-          className="flex-1 max-w-sm"
+          className="input-field flex-1 max-w-sm"
         />
         <select
           value={sortKey}
           onChange={(e) => setSortKey(e.target.value as SortKey)}
-          className="text-sm bg-bg-card border border-border rounded-lg px-3 py-2 text-text-secondary focus:outline-none focus:border-accent/50"
+          className="input-field max-w-xs"
         >
           <option value="distributed">Sort: Most Distributed</option>
           <option value="recipients">Sort: Most Recipients</option>
@@ -89,10 +90,10 @@ export default function ExplorePage() {
           icon="🔍"
           title={search ? `No splits matching "${search}"` : 'No splits yet'}
           description={search ? 'Try a different search term.' : 'Be the first to create a payment split on Stellar.'}
-          action={!search ? { label: 'Create a Split', onClick: () => router.push('/splits/new') } : undefined}
+          action={!search ? <Button onClick={() => router.push('/splits/new')}>Create a Split</Button> : undefined}
         />
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid md:grid-cols-2 md:grid-cols-3 gap-6">
           {displayed.map((split, i) => (
             <Card
               key={split.id}
@@ -104,21 +105,22 @@ export default function ExplorePage() {
               <Link
                 href={`/splits/${split.id}`}
                 className="block p-5"
+                style={{ textDecoration: 'none' }}
               >
-                <h3 className="font-mono text-sm font-semibold text-text-primary group-hover:text-accent transition-colors mb-3">
+                <h3 className="font-mono font-semibold transition-colors mb-4 group-hover:text-accent">
                   {split.id}
                 </h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-text-muted">Owner</span>
-                    <span className="font-mono text-text-secondary">{truncateAddress(split.owner, 4)}</span>
+                <div className="flex-col gap-2">
+                  <div className="flex justify-between" style={{ fontSize: '12px' }}>
+                    <span className="text-secondary">Owner</span>
+                    <span className="font-mono text-secondary">{truncateAddress(split.owner, 4)}</span>
                   </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-text-muted">Recipients</span>
-                    <span className="text-text-secondary">{split.recipientCount}</span>
+                  <div className="flex justify-between" style={{ fontSize: '12px' }}>
+                    <span className="text-secondary">Recipients</span>
+                    <span className="text-secondary">{split.recipientCount}</span>
                   </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-text-muted">Distributed</span>
+                  <div className="flex justify-between" style={{ fontSize: '12px' }}>
+                    <span className="text-secondary">Distributed</span>
                     <span className="font-mono text-accent font-medium">${split.totalDistributed}</span>
                   </div>
                 </div>

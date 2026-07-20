@@ -16,7 +16,7 @@ export default function Card({
   hoverable = false,
   ...props
 }: CardProps) {
-  const baseClasses = `bg-bg-card border border-border rounded-xl p-5 ${
+  const baseClasses = `glass-card ${
     hoverable ? 'hover:border-accent/30 transition-all group' : ''
   } ${className}`;
 

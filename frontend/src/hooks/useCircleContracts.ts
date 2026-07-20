@@ -16,7 +16,8 @@ export interface CircleData {
 }
 
 export function useCircleContracts() {
-  const { address } = useWallet();
+  const { publicKey } = useWallet();
+  const address = publicKey;
   const { txState, execute, reset } = useSorobanContract();
   
   // Simulated state for circles (in production, this reads from Soroban RPC)

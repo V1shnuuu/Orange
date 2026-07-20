@@ -20,31 +20,31 @@ export default function Nav() {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-bg-primary/80 backdrop-blur-xl">
-      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+    <header className="nav-header">
+      <div className="nav-container">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/30 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
+        <Link href="/" className="nav-logo">
+          <div className="nav-logo-icon">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <circle cx="8" cy="8" r="6" stroke="#00C9B1" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="4 2" />
-              <circle cx="8" cy="8" r="3" fill="#00C9B1" />
+              <circle cx="8" cy="8" r="6" stroke="#00e5ff" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="4 2" />
+              <circle cx="8" cy="8" r="3" fill="#00e5ff" />
             </svg>
           </div>
-          <span className="text-lg font-semibold text-text-primary tracking-tight">
+          <span className="nav-logo-text">
             Circle<span className="text-accent">Pact</span>
           </span>
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="nav-links">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className={`text-sm font-medium transition-colors ${
+              className={`nav-link ${
                 pathname === link.href || pathname?.startsWith(link.href + '/')
-                  ? 'text-accent'
-                  : 'text-text-secondary hover:text-text-primary'
+                  ? 'active'
+                  : ''
               }`}
             >
               {link.label}
@@ -53,30 +53,31 @@ export default function Nav() {
         </nav>
 
         {/* Wallet + Mobile toggle */}
-        <div className="flex items-center gap-3">
+        <div className="nav-actions">
           <button
             onClick={() => setFeedbackOpen(true)}
-            className="hidden md:flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-text-secondary border border-border rounded-lg hover:text-text-primary hover:border-text-secondary transition-colors"
+            className="btn btn-secondary"
+            style={{ padding: '6px 12px', fontSize: '13px', display: 'flex', gap: '6px' }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
             </svg>
-            Feedback
+            <span className="hidden md:inline">Feedback</span>
           </button>
-          <span className="hidden md:block"><NetworkBadge /></span>
+          <div style={{ display: 'none' }} className="md:block"><NetworkBadge /></div>
           <WalletButton />
+          
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-text-secondary hover:text-text-primary"
+            className="md:hidden"
+            style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
             aria-label="Toggle menu"
           >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               {mobileMenuOpen ? (
-                <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round"/>
               ) : (
-                <>
-                  <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                </>
+                <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round"/>
               )}
             </svg>
           </button>
@@ -85,30 +86,31 @@ export default function Nav() {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-border bg-bg-primary px-4 py-3 animate-slide-up">
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={() => setMobileMenuOpen(false)}
-              className={`block py-2 text-sm font-medium ${
-                pathname === link.href
-                  ? 'text-accent'
-                  : 'text-text-secondary'
-              }`}
+        <div style={{ padding: '16px', background: 'var(--bg-secondary)', borderTop: '1px solid var(--border)' }} className="md:hidden animate-fade-in-up">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {NAV_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`nav-link ${
+                  pathname === link.href ? 'active' : ''
+                }`}
+                style={{ padding: '8px 0', fontSize: '15px' }}
+              >
+                {link.label}
+              </Link>
+            ))}
+            <button
+              onClick={() => {
+                setFeedbackOpen(true);
+                setMobileMenuOpen(false);
+              }}
+              style={{ padding: '8px 0', fontSize: '15px', color: 'var(--text-secondary)', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer' }}
             >
-              {link.label}
-            </Link>
-          ))}
-          <button
-            onClick={() => {
-              setFeedbackOpen(true);
-              setMobileMenuOpen(false);
-            }}
-            className="w-full text-left py-2 text-sm font-medium text-text-secondary hover:text-text-primary"
-          >
-            Feedback
-          </button>
+              Feedback
+            </button>
+          </div>
         </div>
       )}
       

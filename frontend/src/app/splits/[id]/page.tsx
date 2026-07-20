@@ -75,7 +75,7 @@ export default function SplitDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="container py-16">
         <LoadingSkeleton count={3} />
       </div>
     );
@@ -84,47 +84,49 @@ export default function SplitDetailPage() {
   // Desktop layout
   const renderOverviewPanel = () => (
     <div>
-      <div className="bg-bg-card border border-border rounded-xl p-6 mb-6">
+      <div className="glass-card mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold font-mono text-accent">{splitId}</h2>
-          <span className="px-2.5 py-1 rounded-full bg-success-bg text-success text-xs font-medium">Active</span>
+          <h2 className="font-bold font-mono text-accent" style={{ fontSize: '20px' }}>{splitId}</h2>
+          <span className="px-2.5 py-1 rounded-full text-xs font-medium" style={{ background: 'rgba(0,255,0,0.1)', color: 'var(--success)' }}>Active</span>
         </div>
-        <div className="text-sm text-text-secondary mb-1">Owner</div>
-        <div className="font-mono text-xs text-text-primary mb-4">{truncateAddress(owner, 8)}</div>
-        <div className="text-sm text-text-secondary mb-1">Total Distributed</div>
+        <div className="text-secondary mb-1" style={{ fontSize: '14px' }}>Owner</div>
+        <div className="font-mono mb-4" style={{ fontSize: '12px' }}>{truncateAddress(owner, 8)}</div>
+        <div className="text-secondary mb-1" style={{ fontSize: '14px' }}>Total Distributed</div>
         <motion.div
           key={totalDistributed}
           initial={{ scale: 1.1 }}
           animate={{ scale: 1 }}
-          className="text-2xl font-mono font-bold text-text-primary"
+          className="font-mono font-bold"
+          style={{ fontSize: '24px' }}
         >
           ${totalDistributed}
         </motion.div>
       </div>
 
       {/* Recipient table */}
-      <div className="bg-bg-card border border-border rounded-xl overflow-hidden">
-        <div className="px-5 py-3 border-b border-border">
-          <h3 className="text-sm font-medium text-text-secondary">Recipients</h3>
+      <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div className="px-5 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
+          <h3 className="font-medium text-secondary" style={{ fontSize: '14px' }}>Recipients</h3>
         </div>
-        <div className="divide-y divide-border">
+        <div className="flex-col">
           {recipients.map((r, i) => (
-            <div key={i} className="px-5 py-3 flex items-center justify-between">
+            <div key={i} className="flex items-center justify-between px-5 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
               <button
                 onClick={() => copyAddress(r.address)}
                 title="Copy address"
                 className="flex items-center gap-1.5 group text-left"
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
               >
-                <span className="font-mono text-xs text-text-primary group-hover:text-accent transition-colors">
+                <span className="font-mono transition-colors group-hover:text-accent" style={{ fontSize: '12px' }}>
                   {truncateAddress(r.address, 8)}
                 </span>
-                <span className="text-xs text-text-muted group-hover:text-accent transition-colors">
+                <span className="transition-colors group-hover:text-accent text-secondary" style={{ fontSize: '12px' }}>
                   {addressCopied ? '✓' : '⎘'}
                 </span>
               </button>
               <div className="flex items-center gap-4 text-right">
-                <span className="text-sm font-mono text-accent">{r.share}%</span>
-                <span className="text-sm font-mono text-text-secondary">${r.lastReceived}</span>
+                <span className="font-mono text-accent" style={{ fontSize: '14px' }}>{r.share}%</span>
+                <span className="font-mono text-secondary" style={{ fontSize: '14px' }}>${r.lastReceived}</span>
               </div>
             </div>
           ))}
@@ -134,18 +136,18 @@ export default function SplitDetailPage() {
   );
 
   const renderSendPanel = () => (
-    <div className="bg-bg-card border border-border rounded-xl p-6">
-      <h3 className="text-base font-semibold text-text-primary mb-4">Send Payment</h3>
+    <div className="glass-card">
+      <h3 className="font-semibold mb-4" style={{ fontSize: '16px' }}>Send Payment</h3>
 
       {!isConnected ? (
         <div className="text-center py-6">
-          <p className="text-sm text-text-secondary mb-3">Connect your wallet to send a payment.</p>
-          <button onClick={connect} className="btn-primary text-sm">Connect Wallet</button>
+          <p className="text-secondary mb-3" style={{ fontSize: '14px' }}>Connect your wallet to send a payment.</p>
+          <button onClick={connect} className="btn btn-primary">Connect Wallet</button>
         </div>
       ) : (
         <>
           <div className="mb-4">
-            <label className="block text-sm text-text-secondary mb-2">Amount (USDC)</label>
+            <label className="block text-secondary mb-2" style={{ fontSize: '14px' }}>Amount (USDC)</label>
             <input
               type="number"
               value={amount}
@@ -153,18 +155,19 @@ export default function SplitDetailPage() {
               placeholder="0.00"
               min="0"
               step="0.01"
-              className="font-mono text-lg"
+              className="input-field font-mono w-full"
+              style={{ fontSize: '18px' }}
             />
           </div>
 
           {/* Preview breakdown */}
           {previewPayouts.length > 0 && (
-            <div className="mb-4 p-3 rounded-lg bg-bg-surface border border-border/50">
-              <p className="text-xs text-text-muted mb-2">Distribution Preview</p>
+            <div className="mb-4 p-3 glass-card">
+              <p className="text-secondary mb-2" style={{ fontSize: '12px' }}>Distribution Preview</p>
               {previewPayouts.map((p, i) => (
                 <div key={i} className="flex justify-between py-1">
-                  <span className="font-mono text-xs text-text-secondary">{truncateAddress(p.address, 6)}</span>
-                  <span className="font-mono text-xs text-accent">${p.amount}</span>
+                  <span className="font-mono text-secondary" style={{ fontSize: '12px' }}>{truncateAddress(p.address, 6)}</span>
+                  <span className="font-mono text-accent" style={{ fontSize: '12px' }}>${p.amount}</span>
                 </div>
               ))}
             </div>
@@ -185,7 +188,7 @@ export default function SplitDetailPage() {
           <button
             onClick={handleDistribute}
             disabled={!amount || parseFloat(amount) <= 0 || (txState.status !== 'idle' && txState.status !== 'failed' && txState.status !== 'success')}
-            className="btn-primary w-full mt-4"
+            className="btn btn-primary w-full mt-4"
           >
             {txState.status === 'idle' || txState.status === 'success' || txState.status === 'failed'
               ? 'Distribute USDC'
@@ -193,7 +196,7 @@ export default function SplitDetailPage() {
           </button>
 
           {txState.status === 'success' && (
-            <button onClick={reset} className="btn-secondary w-full mt-2 text-sm">
+            <button onClick={reset} className="btn btn-secondary w-full mt-2">
               Send Another Payment
             </button>
           )}
@@ -203,12 +206,12 @@ export default function SplitDetailPage() {
   );
 
   const renderActivityPanel = () => (
-    <div className="bg-bg-card border border-border rounded-xl p-5">
+    <div className="glass-card">
       <div className="flex items-center gap-2 mb-4">
         <span className="w-2 h-2 rounded-full bg-accent animate-pulse-teal" />
-        <h3 className="text-sm font-medium text-text-secondary">Live Activity</h3>
+        <h3 className="font-medium text-secondary" style={{ fontSize: '14px' }}>Live Activity</h3>
       </div>
-      <div className="space-y-3 max-h-96 overflow-y-auto">
+      <div className="flex-col gap-3 max-h-96 overflow-y-auto pr-2">
         <AnimatePresence>
           {events.map((event, i) => (
             <motion.div
@@ -216,19 +219,20 @@ export default function SplitDetailPage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="border border-border/50 rounded-lg overflow-hidden"
+              className="glass-card mb-3" style={{ padding: 0, overflow: 'hidden' }}
             >
               <button
                 onClick={() => setExpandedEvent(expandedEvent === event.id ? null : event.id)}
-                className="w-full p-3 flex items-center justify-between text-left hover:bg-bg-surface/50 transition-colors"
+                className="w-full p-3 flex items-center justify-between text-left transition-colors"
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
               >
                 <div>
-                  <span className="text-xs font-mono text-text-secondary">{event.sender}</span>
-                  <span className="text-xs text-text-muted ml-2" title={formatTimestamp(event.timestamp)}>
+                  <span className="font-mono text-secondary" style={{ fontSize: '12px' }}>{event.sender}</span>
+                  <span className="text-secondary ml-2" style={{ fontSize: '12px' }} title={formatTimestamp(event.timestamp)}>
                     {formatRelativeTime(event.timestamp)}
                   </span>
                 </div>
-                <span className="font-mono text-sm font-medium text-accent">${event.totalAmount}</span>
+                <span className="font-mono font-medium text-accent" style={{ fontSize: '14px' }}>${event.totalAmount}</span>
               </button>
               <AnimatePresence>
                 {expandedEvent === event.id && (
@@ -238,11 +242,11 @@ export default function SplitDetailPage() {
                     exit={{ height: 0, opacity: 0 }}
                     className="border-t border-border/30 bg-bg-surface/30"
                   >
-                    <div className="p-3 space-y-1">
+                    <div className="flex-col gap-1 p-3">
                       {event.recipients.map((r, j) => (
-                        <div key={j} className="flex justify-between text-xs">
-                          <span className="font-mono text-text-muted">{r.address}</span>
-                          <span className="font-mono text-text-secondary">${r.amount}</span>
+                        <div key={j} className="flex justify-between" style={{ fontSize: '12px' }}>
+                          <span className="font-mono text-secondary">{r.address}</span>
+                          <span className="font-mono text-secondary">${r.amount}</span>
                         </div>
                       ))}
                     </div>
@@ -257,18 +261,19 @@ export default function SplitDetailPage() {
   );
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="container py-16">
       {/* Mobile tab bar */}
       <div className="md:hidden flex border border-border rounded-lg overflow-hidden mb-6">
         {(['overview', 'send', 'activity'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setMobileTab(tab)}
-            className={`flex-1 py-2.5 text-sm font-medium capitalize transition-colors ${
+            className={`flex-1 py-2.5 font-medium capitalize transition-colors ${
               mobileTab === tab
-                ? 'bg-accent text-bg-primary'
-                : 'bg-bg-card text-text-secondary'
+                ? 'bg-accent'
+                : 'glass-card text-secondary'
             }`}
+            style={{ fontSize: '14px', border: 'none' }}
           >
             {tab}
           </button>

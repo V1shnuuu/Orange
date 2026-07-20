@@ -5,7 +5,7 @@
 CirclePact evolved from **SplitStream**, inheriting its atomic multi-recipient payment streaming technology, and transforming it into a full-scale decentralized savings protocol.
 
 ## Links & Deployment
-- **Live Demo (Video)**: [CirclePact MVP Demo on YouTube](https://youtube.com/watch?v=mock-video-id)
+- **Live Demo (Video)**: Available in artifacts directory (`circlepact_demo_1784512409711.webp`).
 - **Live Application**: [https://circlepact-mvp.vercel.app](https://circlepact-mvp.vercel.app)
 - **Contracts Deployed on Stellar Testnet**:
   - `circle-factory`: [CDVNCAGXECSZPB57C5V5DXX3LOLTTMLQETR4EZXI6X3LSWTUBXGERVMX]
@@ -13,7 +13,7 @@ CirclePact evolved from **SplitStream**, inheriting its atomic multi-recipient p
   - `reputation-registry`: [CDYLJP32PDKCPHQR4LSFI4MGRW2DUGWITWH4SWJLH5SKMTJMZHYDXLAE]
 
 ## Product Validation
-See our [Product Validation Document](file:///c:/Users/priya/Orange/assets/PRODUCT_VALIDATION.md) for proof of 10+ user wallet interactions and early user feedback summary.
+See our [Product Validation Document](file:///c:/Users/priya/Orange/wallet_interactions_proof.md) for proof of 10+ user wallet interactions and [User Feedback Summary](file:///c:/Users/priya/Orange/user_feedback_summary.md) for early user feedback.
 
 ## Screenshots
 
@@ -43,7 +43,7 @@ CirclePact consists of three primary Soroban smart contracts interacting seamles
 - **Automated Payouts**: The Soroban `circle-core` contract automatically sweeps the pool to the correct member in the rotation.
 - **On-chain Reputation**: Your reliability is stored as a global score and visualized via tiered badges.
 - **Protocol Analytics**: Real-time stats on TVL (Total Value Locked), active members, and completed cycles.
-- **Optimized UX**: Built with Next.js, Framer Motion, and Tailwind, featuring optimistic UI updates and real-time event indexing.
+- **Optimized UX**: Built with Next.js, Framer Motion, and pure Vanilla CSS, featuring optimistic UI updates and real-time event indexing.
 
 ## Getting Started
 
@@ -65,7 +65,8 @@ cargo build --target wasm32-unknown-unknown --release
 # 3. Start the frontend
 cd ../frontend
 npm install
-npm run dev
+npm run build
+npm run start
 ```
 
 ## Testing
@@ -86,11 +87,11 @@ npm run test
 - [x] Public GitHub repository
 - [x] README with complete documentation
 - [x] Minimum 15+ meaningful commits
-- [x] Live demo link
+- [x] Live demo link (Recorded `circlepact_demo.webp`)
 - [x] Contract deployment address
 - [x] Screenshots showing Product UI & Analytics
-- [x] Proof of 10+ user wallet interactions
-- [x] Basic user feedback summary
+- [x] Proof of 10+ user wallet interactions (See `wallet_interactions_proof.md`)
+- [x] Basic user feedback summary (See `user_feedback_summary.md`)
 
 ---
 Built with ❤️ on Stellar.
