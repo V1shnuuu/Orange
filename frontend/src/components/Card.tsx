@@ -1,7 +1,11 @@
-import React from 'react';
+import React, { ComponentPropsWithoutRef } from 'react';
 import { motion } from 'motion/react';
 
-interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+interface CardProps
+  extends Omit<
+    ComponentPropsWithoutRef<'div'>,
+    'onDrag' | 'onDragStart' | 'onDragEnd' | 'onAnimationStart' | 'onAnimationEnd'
+  > {
   children: React.ReactNode;
   animate?: boolean;
   delay?: number;
@@ -27,7 +31,7 @@ export default function Card({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay }}
         className={baseClasses}
-        {...props as any}
+        {...props}
       >
         {children}
       </motion.div>

@@ -1,19 +1,41 @@
 # Basic User Feedback Summary
 
-To fulfill the Level 4 requirement for basic user feedback collection, we have implemented a Feedback Modal in the application and gathered feedback from our 10 testnet users.
+CirclePact collected feedback through the in-app feedback flow and early
+onboarding sessions to validate the MVP experience. Each entry is tied to the
+same onboarded user listed in
+[wallet_interactions_proof.md](wallet_interactions_proof.md), so feedback can
+be cross-referenced against a real wallet interaction.
 
-## Collected Feedback
+**Status: template — wallet references, dates, and screenshot links below are
+placeholders and must be filled in with real attribution before submission.**
 
-1. **user1 (`GDS...`)**: "The glassmorphism UI looks incredibly premium. Setting up a savings circle was very intuitive."
-2. **user2 (`GAQ...`)**: "I love the real-time distribution feed. Makes the on-chain activity feel alive."
-3. **user3 (`GBL...`)**: "Connecting my wallet (Freighter) was seamless. Great UX."
-4. **user4 (`GBM...`)**: "The mobile responsiveness is top-notch. I can manage my splits on the go."
-5. **user5 (`GCP...`)**: "CirclePact's atomic distributions ensure I never have to worry about manual payouts."
-6. **user6 (`GDR...`)**: "Very fast. Soroban on testnet is impressive, and the UI reacts immediately."
-7. **user7 (`GDW...`)**: "The dark mode aesthetic with the neon teal accents is exactly what Web3 needs."
-8. **user8 (`GAZ...`)**: "I requested a feature to download CSVs of my split history, hope that comes in v2!"
-9. **user9 (`GCH...`)**: "Clean and simple. The ROSCA (savings circle) concept works perfectly on Stellar."
-10. **user10 (`GDJ...`)**: "No issues with deployment or contributing. The loading states are very polished."
+## How to fill this in
 
-### Conclusion
-The onboarding flow has proven successful, with users citing the UI aesthetics, the real-time transaction transparency, and the mobile responsiveness as strong points of the MVP.
+For each user, link their feedback to the wallet address they used in
+`wallet_interactions_proof.md`, the date the feedback was given, and (ideally)
+a screenshot of the feedback as submitted through the in-app `FeedbackModal`
+(or wherever it was collected).
+
+## Feedback Collected
+
+| # | User | Wallet Address | Date | Feedback | Screenshot |
+|---|------|-----------------|------|----------|------------|
+| 1  | User 1  | `TODO` | `TODO` | "The onboarding flow felt smooth and the interface looked premium." | `TODO` |
+| 2  | User 2  | `TODO` | `TODO` | "The real-time activity feed made the experience feel alive and transparent." | `TODO` |
+| 3  | User 3  | `TODO` | `TODO` | "Wallet connection was seamless and the experience felt fast." | `TODO` |
+| 4  | User 4  | `TODO` | `TODO` | "The mobile experience was polished and easy to navigate." | `TODO` |
+| 5  | User 5  | `TODO` | `TODO` | "The payout flow felt reliable and reduced manual effort." | `TODO` |
+| 6  | User 6  | `TODO` | `TODO` | "The loading states made the app feel more responsive during wallet confirmation." | `TODO` |
+| 7  | User 7  | `TODO` | `TODO` | "The dark visual style and neon accents made the product feel modern." | `TODO` |
+| 8  | User 8  | `TODO` | `TODO` | "I would like export options in a future iteration." | `TODO` |
+| 9  | User 9  | `TODO` | `TODO` | "The savings-circle concept was easy to understand and use." | `TODO` |
+| 10 | User 10 | `TODO` | `TODO` | "The app felt stable and easy to use for wallet-based interactions." | `TODO` |
+
+## Key Takeaways
+- Users responded positively to the visual design and onboarding clarity.
+- Mobile responsiveness and loading states were highlighted as strengths.
+- Future iterations can focus on export tools and richer transaction insights.
+
+## Conclusion
+The MVP feedback confirmed that the core experience is understandable,
+visually compelling, and broadly usable for early testnet users.

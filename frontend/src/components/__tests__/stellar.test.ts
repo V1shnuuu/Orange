@@ -9,7 +9,7 @@ import {
 } from '@/lib/stellar';
 
 // A valid 56-char G-address using only A-Z 2-7
-const VALID_ADDRESS = 'GBZX4TKKRMQNFTO2HKPXS4TH6HNCQB7V3CDOGJZ4UQXPBRZ7D7OKKM';
+const VALID_ADDRESS = 'GCHE645J3234KFRIEOH3Z76JU3N27SAKTCKH6QFTZMK2T5MQZ5CBJHV4';
 
 describe('validateStellarAddress', () => {
   it('accepts a valid Stellar address', () => {
@@ -68,7 +68,7 @@ describe('formatRelativeTime', () => {
 
 describe('truncateAddress', () => {
   it('truncates long addresses', () => {
-    expect(truncateAddress(VALID_ADDRESS, 4)).toBe('GBZX...OKKM');
+    expect(truncateAddress(VALID_ADDRESS, 4)).toBe('GCHE...JHV4');
   });
 
   it('returns the full address if shorter than threshold', () => {

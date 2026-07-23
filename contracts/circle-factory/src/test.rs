@@ -11,7 +11,7 @@ fn test_create_circle() {
 
     let admin = Address::generate(&env);
     let circle_id = Symbol::new(&env, "circle1");
-    let name = Symbol::new(&env, "Test Circle");
+    let name = Symbol::new(&env, "TestCircle");
     
     // Auth bypass for testing
     env.mock_all_auths();

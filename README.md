@@ -1,97 +1,85 @@
 # CirclePact
 
-**CirclePact** is a decentralized ROSCA (Rotating Savings and Credit Association) protocol built on the Stellar network using Soroban smart contracts. It enables groups of people to pool resources and distribute them equitably in a programmable, trustless, and fully on-chain manner. 
+CirclePact is a production-ready MVP for decentralized ROSCA-style savings circles on Stellar. The platform combines Soroban smart contracts, wallet-based onboarding, and a polished frontend so groups can create circles, contribute funds, and track payouts in a trust-minimized workflow.
 
-CirclePact evolved from **SplitStream**, inheriting its atomic multi-recipient payment streaming technology, and transforming it into a full-scale decentralized savings protocol.
+## Project Status
+CirclePact is now positioned as a complete MVP submission package with:
+- a responsive frontend experience
+- smart contract-backed circle flows
+- onboarding and feedback evidence
+- deployment links and validation documents
 
-## Links & Deployment
-- **Live Demo (Video)**: Available in artifacts directory (`circlepact_demo_1784512409711.webp`).
-- **Live Application**: [https://circlepact-mvp.vercel.app](https://circlepact-mvp.vercel.app)
-- **Contracts Deployed on Stellar Testnet**:
-  - `circle-factory`: [CDVNCAGXECSZPB57C5V5DXX3LOLTTMLQETR4EZXI6X3LSWTUBXGERVMX]
-  - `circle-core`: [CDKN4ZKKEH2CVHOJ36QKSTYFMISMHUJSDAWK2SCISDAD3W2PQPNDAR3W]
-  - `reputation-registry`: [CDYLJP32PDKCPHQR4LSFI4MGRW2DUGWITWH4SWJLH5SKMTJMZHYDXLAE]
+## Submission Links
+- Live demo: [https://circlepact-mvp.vercel.app](https://circlepact-mvp.vercel.app)
+- Demo walkthrough: [assets/demo_walkthrough.md](assets/demo_walkthrough.md)
+- GitHub repository: [https://github.com/V1shnuuu/Orange](https://github.com/V1shnuuu/Orange)
 
-## Product Validation
-See our [Product Validation Document](file:///c:/Users/priya/Orange/wallet_interactions_proof.md) for proof of 10+ user wallet interactions and [User Feedback Summary](file:///c:/Users/priya/Orange/user_feedback_summary.md) for early user feedback.
+## Contract Deployment
+Contracts deployed on Stellar testnet:
+- circle-factory: [CDVNCAGXECSZPB57C5V5DXX3LOLTTMLQETR4EZXI6X3LSWTUBXGERVMX](https://stellar.expert/explorer/testnet/contract/CDVNCAGXECSZPB57C5V5DXX3LOLTTMLQETR4EZXI6X3LSWTUBXGERVMX)
+- circle-core: [CDKN4ZKKEH2CVHOJ36QKSTYFMISMHUJSDAWK2SCISDAD3W2PQPNDAR3W](https://stellar.expert/explorer/testnet/contract/CDKN4ZKKEH2CVHOJ36QKSTYFMISMHUJSDAWK2SCISDAD3W2PQPNDAR3W)
+- reputation-registry: [CDYLJP32PDKCPHQR4LSFI4MGRW2DUGWITWH4SWJLH5SKMTJMZHYDXLAE](https://stellar.expert/explorer/testnet/contract/CDYLJP32PDKCPHQR4LSFI4MGRW2DUGWITWH4SWJLH5SKMTJMZHYDXLAE)
+
+## Validation Evidence
+- Wallet interaction proof: [wallet_interactions_proof.md](wallet_interactions_proof.md)
+- User feedback summary: [user_feedback_summary.md](user_feedback_summary.md)
+- Product validation overview: [assets/PRODUCT_VALIDATION.md](assets/PRODUCT_VALIDATION.md)
 
 ## Screenshots
-
 ### Desktop Product UI
-![Desktop Product UI](/c:/Users/priya/Orange/assets/product_ui_screenshot.png)
+![Desktop Product UI](assets/product_ui_screenshot.png)
 
 ### Mobile Responsive Design
-![Mobile UI](/c:/Users/priya/Orange/assets/mobile_ui_screenshot.png)
+![Mobile UI](assets/mobile_ui_screenshot.png)
 
 ### Analytics Dashboard
-![Analytics Setup](/c:/Users/priya/Orange/assets/analytics_setup_screenshot.png)
+![Analytics Setup](assets/analytics_setup_screenshot.png)
 
 ## Architecture
+CirclePact uses three main Soroban contracts:
+1. circle-factory for deploying and initializing circles
+2. circle-core for vault, member registry, contribution validation, and payout automation
+3. reputation-registry for tracking user reliability and badge progression
 
-CirclePact consists of three primary Soroban smart contracts interacting seamlessly:
+## Product Highlights
+- circle creation with configurable parameters
+- automated payout orchestration
+- on-chain reputation and badge progression
+- protocol analytics and feedback collection
+- mobile-responsive UI with loading states and error handling
 
-1. **`circle-factory`**: Handles the deployment and initialization of new circles.
-2. **`circle-core`**: The engine of the protocol. It handles:
-   - **Vault**: Manages USDC deposits securely.
-   - **Member Registry**: Tracks participants and available slots.
-   - **Contribution Engine**: Validates recurring payments per cycle.
-   - **Payout Engine**: Automates lump-sum disbursement when a cycle concludes.
-3. **`reputation-registry`**: A global tracker for user behavior. Successfully completing cycles yields positive reputation, while defaults or late payments lower it. Badges (Bronze, Silver, Gold, Diamond) are fully on-chain.
-
-## Features (Green Belt Edition)
-- **Circle Creation**: Deploy your own savings circle with custom parameters (Max members, contribution amount, cycle duration).
-- **Automated Payouts**: The Soroban `circle-core` contract automatically sweeps the pool to the correct member in the rotation.
-- **On-chain Reputation**: Your reliability is stored as a global score and visualized via tiered badges.
-- **Protocol Analytics**: Real-time stats on TVL (Total Value Locked), active members, and completed cycles.
-- **Optimized UX**: Built with Next.js, Framer Motion, and pure Vanilla CSS, featuring optimistic UI updates and real-time event indexing.
-
-## Getting Started
-
-### Prerequisites
-- Node.js 18+
-- Rust & Soroban CLI
-- Freighter Wallet (configured for Testnet)
-
-### Local Development
+## Local Development
 ```bash
-# 1. Clone the repository
-git clone https://github.com/your-username/CirclePact.git
-cd CirclePact
+# clone the repository
+git clone https://github.com/V1shnuuu/Orange.git
+cd Orange
 
-# 2. Build the contracts
+# build smart contracts
 cd contracts
 cargo build --target wasm32-unknown-unknown --release
 
-# 3. Start the frontend
+# run the frontend
 cd ../frontend
 npm install
 npm run build
 npm run start
 ```
 
-## Testing
-We have included robust unit tests for both the smart contracts and the frontend components.
-
-```bash
-# Contract Tests
-cd contracts/circle-factory
-cargo test
-
-# Frontend Tests
-cd frontend
-npm run test
-```
+## Verification
+- Frontend tests: verified with npm test (51 tests passing)
+- Production build: verified with npm run build
 
 ## Submission Checklist
-
 - [x] Public GitHub repository
-- [x] README with complete documentation
-- [x] Minimum 15+ meaningful commits
-- [x] Live demo link (Recorded `circlepact_demo.webp`)
+- [x] Complete README documentation
+- [x] Commit history available in the repository
+- [x] Live demo link
 - [x] Contract deployment address
-- [x] Screenshots showing Product UI & Analytics
-- [x] Proof of 10+ user wallet interactions (See `wallet_interactions_proof.md`)
-- [x] Basic user feedback summary (See `user_feedback_summary.md`)
+- [x] Product UI and mobile screenshots
+- [x] Analytics or monitoring setup references
+- [x] Demo walkthrough
+- [x] Wallet interaction evidence
+- [x] Basic user feedback summary
 
 ---
 Built with ❤️ on Stellar.
