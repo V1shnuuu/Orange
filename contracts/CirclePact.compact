@@ -1,0 +1,50 @@
+pragma language_version >= 0.23.0;
+
+import CompactStandardLibrary;
+
+export enum MemberStatus {
+  ACTIVE,
+  INACTIVE
+}
+
+export struct CircleRecord {
+  admin: Bytes<32>,
+  memberCount: Uint<64>,
+  poolBalance: Uint<64>
+}
+
+// PUBLIC LEDGER STATE ONLY.
+export sealed ledger circleRecords: Map<Bytes<32>, CircleRecord>;
+
+export circuit createCircle(
+  circleHash: Bytes<32>,
+  admin: Bytes<32>
+): [] {
+  assert(!circleRecords.member(circleHash), "Circle already registered");
+
+  circleRecords.insert(
+    disclose(circleHash),
+    CircleRecord {
+      admin: disclose(admin),
+      memberCount: 1,
+      poolBalance: 0
+    }
+  );
+}
+
+export circuit contributeToCircle(
+  circleHash: Bytes<32>,
+  amount: Uint<64>
+): [] {
+  assert(circleRecords.member(circleHash), "Circle is not registered");
+  
+  const record = circleRecords.lookup(circleHash);
+  circleRecords.insert(
+    circleHash,
+    CircleRecord {
+      admin: record.admin,
+      memberCount: record.memberCount,
+      poolBalance: record.poolBalance + amount
+    }
+  );
+}
