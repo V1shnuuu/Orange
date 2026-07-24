@@ -1,3 +1,5 @@
 contracts/target/
 node_modules/
 .next/
+package-lock.json
+Cargo.lock
