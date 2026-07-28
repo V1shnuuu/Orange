@@ -3,11 +3,13 @@
 CirclePact is a production-ready MVP for decentralized ROSCA-style savings circles on Stellar. The platform combines Soroban smart contracts, wallet-based onboarding, and a polished frontend so groups can create circles, contribute funds, and track payouts in a trust-minimized workflow.
 
 ## Project Status
-CirclePact is now positioned as a complete MVP submission package with:
+CirclePact's MVP is live and includes:
 - a responsive frontend experience
 - smart contract-backed circle flows
-- onboarding and feedback evidence
-- deployment links and validation documents
+- deployment links
+
+Level 5 (user growth, real onboarding evidence, and feedback collection) is
+in progress — see the checklist below.
 
 ## Submission Links
 - Live demo: [https://circlepact-mvp.vercel.app](https://circlepact-mvp.vercel.app)
@@ -20,8 +22,10 @@ Contracts deployed on Stellar testnet:
 - circle-core: [CDKN4ZKKEH2CVHOJ36QKSTYFMISMHUJSDAWK2SCISDAD3W2PQPNDAR3W](https://stellar.expert/explorer/testnet/contract/CDKN4ZKKEH2CVHOJ36QKSTYFMISMHUJSDAWK2SCISDAD3W2PQPNDAR3W)
 - reputation-registry: [CDYLJP32PDKCPHQR4LSFI4MGRW2DUGWITWH4SWJLH5SKMTJMZHYDXLAE](https://stellar.expert/explorer/testnet/contract/CDYLJP32PDKCPHQR4LSFI4MGRW2DUGWITWH4SWJLH5SKMTJMZHYDXLAE)
 
-Contracts deployed on Midnight Preprod:
-- CirclePact: `0x7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b` (✅ Deployed)
+Midnight integration: not yet deployed. The Compact contract source in this
+repo (`contracts/CirclePact.compact`) compiles against the Midnight Compact
+standard library but has not been deployed to a live Midnight network. This
+section will be updated with a real deployment address once that happens.
 
 ## Validation Evidence
 - Wallet interaction proof: [wallet_interactions_proof.md](wallet_interactions_proof.md)
@@ -128,17 +132,27 @@ npm run start
 - Frontend tests: verified with npm test (51 tests passing)
 - Production build: verified with npm run build
 
-## Submission Checklist
+## Level 5 Submission Checklist
 - [x] Public GitHub repository
-- [x] Complete README documentation
-- [x] Commit history available in the repository
-- [x] Live demo link
-- [x] Contract deployment address
-- [x] Product UI and mobile screenshots
-- [x] Analytics or monitoring setup references
-- [x] Demo walkthrough
-- [x] Wallet interaction evidence
-- [x] Basic user feedback summary
+- [x] 20+ meaningful commits
+- [x] Live deployed application
+- [ ] Proof of 50+ real testnet users with real transaction activity — see [wallet_interactions_proof.md](wallet_interactions_proof.md) (template, pending real data)
+- [ ] User feedback collected via Google Form — see [assets/google_form_spec.md](assets/google_form_spec.md) for the form spec, and [user_feedback_summary.md](user_feedback_summary.md) for results (pending real responses)
+- [ ] Exported feedback Excel sheet linked in README
+- [ ] Improvement plan based on feedback, with linked commits
+- [ ] Pitch deck / PPT link
+- [ ] Demo video link
+- [ ] Screenshots of analytics or transaction activity
+- [x] Updated documentation
+
+Items above are marked pending until they are backed by real user data —
+see [wallet_interactions_proof.md](wallet_interactions_proof.md) and
+[user_feedback_summary.md](user_feedback_summary.md) for the templates to fill in.
+
+## User Feedback & Iteration
+- Feedback form: see [assets/google_form_spec.md](assets/google_form_spec.md)
+- Exported responses: `TODO — link Excel export here once collected`
+- Planned improvements based on feedback: see [user_feedback_summary.md](user_feedback_summary.md#planned-improvements-based-on-feedback)
 
 ---
 Built with ❤️ on Stellar and Midnight.
