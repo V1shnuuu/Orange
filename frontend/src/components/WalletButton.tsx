@@ -2,9 +2,10 @@
 
 import { useWallet } from './WalletProvider';
 import { truncateAddress } from '@/lib/stellar';
+import ErrorBanner from './ErrorBanner';
 
 export default function WalletButton() {
-  const { publicKey, isConnected, isConnecting, connect, disconnect, error } = useWallet();
+  const { publicKey, isConnected, isConnecting, connect, disconnect, error, clearError } = useWallet();
 
   if (isConnected && publicKey) {
     return (
@@ -41,10 +42,13 @@ export default function WalletButton() {
           'Connect Wallet'
         )}
       </button>
-      {error && (
-        <div className="absolute top-full mt-2 right-0 w-64 p-3 rounded-lg bg-error-bg border border-error/20 shadow-lg animate-slide-up z-50">
-          <p className="text-xs text-error font-medium">{error}</p>
+      {error && error.type !== 'wallet_not_installed' && (
+        <div className="absolute top-full mt-2 right-0 w-64 z-50 animate-slide-up">
+          <ErrorBanner error={error} onDismiss={clearError} />
         </div>
+      )}
+      {error && error.type === 'wallet_not_installed' && (
+        <ErrorBanner error={error} onDismiss={clearError} />
       )}
     </div>
   );

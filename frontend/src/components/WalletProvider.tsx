@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { classifyError, type AppError } from '@/lib/errors';
 
 interface WalletContextType {
   publicKey: string | null;
@@ -8,7 +9,8 @@ interface WalletContextType {
   isConnecting: boolean;
   connect: () => Promise<void>;
   disconnect: () => void;
-  error: string | null;
+  error: AppError | null;
+  clearError: () => void;
 }
 
 const WalletContext = createContext<WalletContextType>({
@@ -18,6 +20,7 @@ const WalletContext = createContext<WalletContextType>({
   connect: async () => {},
   disconnect: () => {},
   error: null,
+  clearError: () => {},
 });
 
 export function useWallet() {
@@ -27,7 +30,7 @@ export function useWallet() {
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [publicKey, setPublicKey] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<AppError | null>(null);
 
   // Check for existing connection on mount
   useEffect(() => {
@@ -59,12 +62,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('splitstream_wallet', address);
     } catch (err: unknown) {
       console.error("Wallet connection error:", err);
-      const message = (err instanceof Error) ? err.message : (typeof err === 'string' ? err : JSON.stringify(err)) || 'Failed to connect wallet';
-      if (message.toLowerCase().includes('not') && message.toLowerCase().includes('install')) {
-        setError('No Stellar wallet detected. Please install Freighter, xBull, or Albedo.');
-      } else {
-        setError(message);
-      }
+      setError(classifyError(err));
     } finally {
       setIsConnecting(false);
     }
@@ -75,6 +73,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('splitstream_wallet');
   }, []);
 
+  const clearError = useCallback(() => setError(null), []);
+
   return (
     <WalletContext.Provider
       value={{
@@ -84,6 +84,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         connect,
         disconnect,
         error,
+        clearError,
       }}
     >
       {children}

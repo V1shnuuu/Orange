@@ -17,6 +17,8 @@ export default function CreateCirclePage() {
   const [duration, setDuration] = useState(7);
   const [payoutOrder, setPayoutOrder] = useState('fixed');
 
+  const [createdCircleId, setCreatedCircleId] = useState<string | null>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -27,11 +29,10 @@ export default function CreateCirclePage() {
         maxMembers,
         duration
       });
-      
-      // Delay navigation slightly for UX
-      setTimeout(() => {
-        router.push(`/circles/${res.result}`);
-      }, 1500);
+
+      const circleId = res.result as string;
+      setCreatedCircleId(circleId);
+      router.push(`/circles/${circleId}`);
     } catch (err) {
       console.error(err);
     }
@@ -45,6 +46,15 @@ export default function CreateCirclePage() {
           hash={txState.hash}
           error={txState.error}
         />
+        {txState.status === 'success' && createdCircleId && (
+          <button
+            onClick={() => router.push(`/circles/${createdCircleId}`)}
+            className="btn btn-secondary mt-4"
+            style={{ width: '100%' }}
+          >
+            View Circle
+          </button>
+        )}
       </div>
     );
   }

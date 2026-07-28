@@ -9,6 +9,8 @@ import Timeline from '@/components/Timeline';
 import MemberCard from '@/components/MemberCard';
 import TransactionStatusCard from '@/components/TransactionStatusCard';
 import ErrorBanner from '@/components/ErrorBanner';
+import EmptyState from '@/components/EmptyState';
+import Link from 'next/link';
 import { useMemo } from 'react';
 
 export default function CircleDashboardPage() {
@@ -46,7 +48,20 @@ export default function CircleDashboardPage() {
   }, []);
 
   if (!circle) {
-    return <div className="text-center py-20">Circle not found.</div>;
+    return (
+      <div className="container py-16">
+        <EmptyState
+          title="Circle Not Found"
+          description="This circle doesn't exist or may have been removed."
+          icon="🔍"
+          action={
+            <Link href="/circles" className="btn-primary">
+              Browse Circles
+            </Link>
+          }
+        />
+      </div>
+    );
   }
 
   const totalPool = BigInt(circle.contributionAmount) * BigInt(circle.maxMembers);
