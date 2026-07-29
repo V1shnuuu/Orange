@@ -129,30 +129,77 @@ npm run start
 ```
 
 ## Verification
-- Frontend tests: verified with npm test (51 tests passing)
-- Production build: verified with npm run build
+- Frontend tests: verified with `npm test` (53 tests passing)
+- Type checking: verified with `npm run type-check`
+- Production build: verified with `npm run build`
 
 ## Level 5 Submission Checklist
 - [x] Public GitHub repository
-- [x] 20+ meaningful commits
+- [x] 20+ meaningful commits (84 at time of writing)
 - [x] Live deployed application
-- [ ] Proof of 50+ real testnet users with real transaction activity — see [wallet_interactions_proof.md](wallet_interactions_proof.md) (template, pending real data)
-- [ ] User feedback collected via Google Form — see [assets/google_form_spec.md](assets/google_form_spec.md) for the form spec, and [user_feedback_summary.md](user_feedback_summary.md) for results (pending real responses)
+- [x] Improved UX/UI and product stability — see [Product Improvements Shipped](#product-improvements-shipped)
+- [x] Optimized onboarding experience (wallet error handling, install prompts, transaction feedback)
+- [x] Updated documentation
+- [ ] Proof of 50+ real testnet users with real transaction activity — [wallet_interactions_proof.md](wallet_interactions_proof.md) is an empty template
+- [ ] Google Form created and distributed — spec ready at [assets/google_form_spec.md](assets/google_form_spec.md), form not yet built
 - [ ] Exported feedback Excel sheet linked in README
-- [ ] Improvement plan based on feedback, with linked commits
-- [ ] Pitch deck / PPT link
+- [ ] New features driven by collected user feedback (blocked on feedback collection)
+- [ ] Pitch deck / PPT link — content drafted at [assets/pitch_deck_content.md](assets/pitch_deck_content.md), deck not yet built
 - [ ] Demo video link
 - [ ] Screenshots of analytics or transaction activity
-- [x] Updated documentation
 
-Items above are marked pending until they are backed by real user data —
-see [wallet_interactions_proof.md](wallet_interactions_proof.md) and
-[user_feedback_summary.md](user_feedback_summary.md) for the templates to fill in.
+Unchecked items are not yet done. Anything depending on real users is blocked
+until onboarding actually happens — these are deliberately not marked complete
+on the basis of templates or placeholder data.
 
-## User Feedback & Iteration
-- Feedback form: see [assets/google_form_spec.md](assets/google_form_spec.md)
-- Exported responses: `TODO — link Excel export here once collected`
-- Planned improvements based on feedback: see [user_feedback_summary.md](user_feedback_summary.md#planned-improvements-based-on-feedback)
+## Product Improvements Shipped
+
+The following improvements were made from an internal UX and code audit of the
+MVP. They are **not** yet driven by collected user feedback — no responses have
+been gathered yet (see the next section). They are listed here with commit links
+so the iteration history is traceable.
+
+| Area | Improvement | Commit |
+|------|-------------|--------|
+| UX / stability | Rebuilt the visual language on a real design-token system. Tailwind was configured but never generating utility classes, so much of the UI was silently rendering unstyled — this fixes the root cause and restyles every page and component. | [`ddbde95`](https://github.com/V1shnuuu/Orange/commit/ddbde95) |
+| Onboarding | Wallet-connect failures raised a bare rejection object that the error classifier could not read, so users saw nothing useful. Errors are now classified correctly and surface a wallet-install modal with Freighter / xBull / Albedo links. | [`ddbde95`](https://github.com/V1shnuuu/Orange/commit/ddbde95), [`bb2892f`](https://github.com/V1shnuuu/Orange/commit/bb2892f) |
+| Onboarding | Circle creation waited on a fixed `setTimeout` before navigating instead of on the actual transaction result, and offered no fallback if navigation failed. Now navigates on real success with a manual "View Circle" fallback. | [`bb2892f`](https://github.com/V1shnuuu/Orange/commit/bb2892f) |
+| UX | "Circle not found" rendered as bare unstyled text with no way back. Replaced with the app's standard empty state and a link to browse circles. | [`bb2892f`](https://github.com/V1shnuuu/Orange/commit/bb2892f) |
+| Feedback capture | The in-app feedback modal's close button was unclickable (a sibling layer intercepted the click) and would have submitted the form once reachable. Fixed, with Escape-to-close and regression tests added. | [`ddbde95`](https://github.com/V1shnuuu/Orange/commit/ddbde95) |
+| Integrity | Removed fabricated user-activity evidence (a script that generated fake wallets and transaction hashes) and replaced it with honest templates to be filled with real data. | [`49daf61`](https://github.com/V1shnuuu/Orange/commit/49daf61) |
+
+## User Feedback & Next-Phase Iteration
+
+**Status: feedback collection has not started.** The form below has not been
+built or distributed, so there are no responses to analyse and no
+feedback-driven changes to report yet.
+
+- Feedback form spec (ready to build): [assets/google_form_spec.md](assets/google_form_spec.md)
+- Live form link: `TODO — add once the Google Form is created`
+- Exported responses (Excel): `TODO — add once responses are collected`
+- Feedback analysis: [user_feedback_summary.md](user_feedback_summary.md)
+
+### How the next phase will use that feedback
+
+Once real responses are collected, each change made in response to feedback will
+be added to the table above with its commit link, so every iteration traces back
+to the feedback that motivated it. The intended process:
+
+1. Collect responses (wallet address, email, name, rating, free-text feedback).
+2. Cross-reference each wallet address against a real testnet transaction on
+   Stellar Expert before counting it as an onboarded user.
+3. Group free-text feedback into themes and prioritise by rating impact.
+4. Ship changes per theme, one commit per change, linked in the table above.
+
+### Known gaps this phase must also close
+
+- **Contract integration is simulated.** `useCircleContracts` and
+  `useSorobanContract` use `setTimeout` and in-memory state rather than real
+  Soroban RPC calls, so circle actions do not yet write to the deployed
+  contracts. This must be wired to the live testnet contracts before circle
+  activity can count as real on-chain usage.
+- **In-app feedback is not persisted.** `FeedbackModal` only logs to the
+  console; it needs an API route or webhook before it can collect anything.
 
 ---
 Built with ❤️ on Stellar and Midnight.
