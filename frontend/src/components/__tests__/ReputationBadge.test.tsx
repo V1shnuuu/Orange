@@ -8,15 +8,15 @@ describe('ReputationBadge', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('renders Bronze badge with correct text when showLabel is true', () => {
-    render(<ReputationBadge tier="Bronze" showLabel />);
+  it('renders Bronze badge with correct text and icon when showLabel is true', () => {
+    const { container } = render(<ReputationBadge tier="Bronze" showLabel />);
     expect(screen.getByText('Bronze')).toBeDefined();
-    expect(screen.getByText('🥉')).toBeDefined();
+    expect(container.querySelector('svg.lucide-medal')).not.toBeNull();
   });
 
-  it('renders Diamond badge with correct text when showLabel is true', () => {
-    render(<ReputationBadge tier="Diamond" showLabel />);
+  it('renders Diamond badge with correct text and icon when showLabel is true', () => {
+    const { container } = render(<ReputationBadge tier="Diamond" showLabel />);
     expect(screen.getByText('Diamond')).toBeDefined();
-    expect(screen.getByText('💎')).toBeDefined();
+    expect(container.querySelector('svg.lucide-gem')).not.toBeNull();
   });
 });

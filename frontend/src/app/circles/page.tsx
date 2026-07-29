@@ -1,28 +1,35 @@
 'use client';
 
+import Link from 'next/link';
+import { Plus } from 'lucide-react';
 import { useCircleContracts } from '@/hooks/useCircleContracts';
 import CircleCard from '@/components/CircleCard';
 import EmptyState from '@/components/EmptyState';
-import Link from 'next/link';
+import PageHeader from '@/components/PageHeader';
+import Button from '@/components/Button';
 
 export default function CirclesPage() {
   const { circles } = useCircleContracts();
 
   return (
-    <div className="container py-16">
-      <div className="flex justify-between items-center mb-12">
-        <div>
-          <h1 className="hero-title mb-2">Explore Circles</h1>
-          <p className="text-secondary">Join an active savings circle and start building reputation.</p>
-        </div>
-        <Link href="/circles/new" className="btn btn-primary">
-          Create Circle
-        </Link>
-      </div>
+    <div className="container py-14">
+      <PageHeader
+        eyebrow="Circles"
+        title="Explore savings circles"
+        description="Join an active circle and start building on-chain reputation."
+        actions={
+          <Link href="/circles/new">
+            <Button>
+              <Plus size={16} />
+              Create circle
+            </Button>
+          </Link>
+        }
+      />
 
       {circles.length > 0 ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {circles.map(circle => (
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {circles.map((circle) => (
             <CircleCard
               key={circle.id}
               id={circle.id}
@@ -36,12 +43,15 @@ export default function CirclesPage() {
         </div>
       ) : (
         <EmptyState
-          title="No Active Circles"
-          description="There are currently no active savings circles to join. Be the first to start one!"
-          icon="⭕"
+          title="No active circles"
+          description="There are no active savings circles to join right now. Be the first to start one."
+          icon="○"
           action={
-            <Link href="/circles/new" className="btn-primary">
-              Create a Circle
+            <Link href="/circles/new">
+              <Button>
+                <Plus size={16} />
+                Create a circle
+              </Button>
             </Link>
           }
         />

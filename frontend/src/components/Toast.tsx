@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { CheckCircle2, XCircle, Info, AlertTriangle, X } from 'lucide-react';
 
 export type ToastVariant = 'success' | 'error' | 'info' | 'warning';
 
@@ -13,21 +14,23 @@ export interface ToastProps {
   onDismiss: (id: string) => void;
 }
 
-const VARIANT_STYLES: Record<ToastVariant, { border: string; icon: string }> = {
-  success: { border: 'border-accent/40', icon: '✓' },
-  error:   { border: 'border-red-500/40', icon: '✕' },
-  info:    { border: 'border-blue-400/40', icon: 'ℹ' },
-  warning: { border: 'border-yellow-400/40', icon: '⚠' },
+const VARIANT_CONFIG: Record<
+  ToastVariant,
+  { className: string; Icon: React.ComponentType<{ size?: number }> }
+> = {
+  success: { className: 'border-accent/30 text-accent', Icon: CheckCircle2 },
+  error: { className: 'border-error/30 text-error', Icon: XCircle },
+  info: { className: 'border-info/30 text-info', Icon: Info },
+  warning: { className: 'border-warning/30 text-warning', Icon: AlertTriangle },
 };
 
-const ICON_COLOR: Record<ToastVariant, string> = {
-  success: 'text-accent',
-  error:   'text-red-400',
-  info:    'text-blue-400',
-  warning: 'text-yellow-400',
-};
-
-export function Toast({ id, message, variant = 'info', duration = 4000, onDismiss }: ToastProps) {
+export function Toast({
+  id,
+  message,
+  variant = 'info',
+  duration = 4000,
+  onDismiss,
+}: ToastProps) {
   const [visible, setVisible] = useState(false);
 
   // Animate in
@@ -43,24 +46,26 @@ export function Toast({ id, message, variant = 'info', duration = 4000, onDismis
     return () => clearTimeout(t);
   }, [id, duration, onDismiss]);
 
-  const { border, icon } = VARIANT_STYLES[variant];
+  const { className, Icon } = VARIANT_CONFIG[variant];
 
   return (
     <div
       role="alert"
       aria-live="polite"
-      className={`flex items-start gap-3 rounded-xl border bg-bg-primary/95 backdrop-blur-md px-4 py-3 shadow-lg transition-all duration-300 ${border} ${
-        visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+      className={`flex items-start gap-3 rounded-2xl border bg-bg-surface/95 px-4 py-3.5 shadow-lg backdrop-blur-xl transition-all duration-300 ${className} ${
+        visible ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
       }`}
     >
-      <span className={`text-base font-bold leading-none mt-0.5 ${ICON_COLOR[variant]}`}>{icon}</span>
-      <p className="flex-1 text-sm text-text-primary leading-snug">{message}</p>
+      <span className="mt-0.5 shrink-0">
+        <Icon size={16} />
+      </span>
+      <p className="flex-1 text-sm leading-snug text-white">{message}</p>
       <button
         onClick={() => onDismiss(id)}
-        className="text-text-muted hover:text-text-primary transition-colors text-lg leading-none"
+        className="shrink-0 text-text-muted transition-colors hover:text-white"
         aria-label="Dismiss notification"
       >
-        ×
+        <X size={15} />
       </button>
     </div>
   );
@@ -78,7 +83,7 @@ export function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
   return (
     <div
       id="toast-container"
-      className="fixed bottom-6 right-6 z-[200] flex flex-col gap-2 w-80 max-w-[calc(100vw-3rem)]"
+      className="fixed bottom-6 right-6 z-[200] flex w-80 max-w-[calc(100vw-3rem)] flex-col gap-2"
       aria-label="Notifications"
     >
       {toasts.map((t) => (

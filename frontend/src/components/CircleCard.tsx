@@ -1,12 +1,12 @@
-import React from 'react';
 import Link from 'next/link';
 import { motion } from 'motion/react';
 import { formatAmount } from '@/lib/stellar';
+import Button from './Button';
 
 interface CircleCardProps {
   id: string;
   name: string;
-  contributionAmount: string; // in USDC
+  contributionAmount: string; // in stroops
   maxMembers: number;
   currentMembers: number;
   cycleDurationDays: number;
@@ -25,48 +25,60 @@ export default function CircleCard({
 
   return (
     <motion.div
-      whileHover={{ y: -4, borderColor: 'var(--accent)' }}
-      className="glass-card flex flex-col justify-between transition-all group"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      className="glass-card glass-card-hoverable flex flex-col p-6"
     >
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="font-bold transition-colors">{name}</h3>
-          <span className="font-mono text-secondary" style={{ fontSize: '12px', background: 'var(--bg-secondary)', padding: '4px 8px', borderRadius: '4px' }}>
-            {cycleDurationDays}D
+      <div className="mb-6 flex items-start justify-between gap-3">
+        <h3 className="text-[17px] font-semibold leading-snug tracking-tight text-white">
+          {name}
+        </h3>
+        <span className="shrink-0 rounded-full border border-border bg-white/5 px-2.5 py-1 font-mono text-[11px] text-text-secondary">
+          {cycleDurationDays}D
+        </span>
+      </div>
+
+      <dl className="mb-6 space-y-2.5">
+        <div className="flex justify-between text-sm">
+          <dt className="text-text-secondary">Contribution</dt>
+          <dd className="font-mono font-medium text-white">
+            ${formatAmount(BigInt(contributionAmount))}
+          </dd>
+        </div>
+        <div className="flex justify-between text-sm">
+          <dt className="text-text-secondary">Total payout</dt>
+          <dd className="font-mono font-semibold text-iris-mint">
+            ${formatAmount(BigInt(contributionAmount) * BigInt(maxMembers))}
+          </dd>
+        </div>
+      </dl>
+
+      <div className="mb-7">
+        <div className="mb-2 flex justify-between text-xs">
+          <span className="text-text-secondary">Members</span>
+          <span className="font-medium text-white">
+            {currentMembers} / {maxMembers}
           </span>
         </div>
-        
-        <div className="flex-col gap-2 mb-8">
-          <div className="flex justify-between" style={{ fontSize: '14px' }}>
-            <span className="text-secondary">Contribution</span>
-            <span className="font-mono font-medium">${formatAmount(BigInt(contributionAmount))}</span>
-          </div>
-          <div className="flex justify-between" style={{ fontSize: '14px' }}>
-            <span className="text-secondary">Total Payout</span>
-            <span className="font-mono font-bold text-accent">${formatAmount(BigInt(contributionAmount) * BigInt(maxMembers))}</span>
-          </div>
-        </div>
-
-        <div className="mb-8">
-          <div className="flex justify-between mb-2" style={{ fontSize: '12px' }}>
-            <span className="text-secondary">Members</span>
-            <span className="font-medium">{currentMembers} / {maxMembers}</span>
-          </div>
-          <div style={{ height: '6px', width: '100%', background: 'var(--bg-secondary)', borderRadius: '100px', overflow: 'hidden' }}>
-            <motion.div
-              style={{ height: '100%', borderRadius: '100px', background: isFull ? 'var(--error)' : 'var(--accent)' }}
-              initial={{ width: 0 }}
-              animate={{ width: `${progressPercent}%` }}
-              transition={{ duration: 1, ease: 'easeOut' }}
-            />
-          </div>
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/8">
+          <motion.div
+            className={`h-full rounded-full ${isFull ? 'bg-white/40' : 'bg-iris'}`}
+            initial={{ width: 0 }}
+            animate={{ width: `${progressPercent}%` }}
+            transition={{ duration: 0.9, ease: 'easeOut' }}
+          />
         </div>
       </div>
 
-      <Link href={`/circles/${id}`} className="block">
-        <button className={`btn w-full ${isFull ? 'btn-secondary' : 'btn-primary'}`} style={{ width: '100%' }} disabled={isFull}>
-          {isFull ? 'Circle Full' : 'View Circle'}
-        </button>
+      <Link href={`/circles/${id}`} className="mt-auto block">
+        <Button
+          variant={isFull ? 'outline' : 'primary'}
+          className="w-full"
+          disabled={isFull}
+        >
+          {isFull ? 'Circle full' : 'View circle'}
+        </Button>
       </Link>
     </motion.div>
   );

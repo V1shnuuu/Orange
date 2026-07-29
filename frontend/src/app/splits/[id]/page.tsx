@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
+import { Check, Copy } from 'lucide-react';
 import { useWallet } from '@/components/WalletProvider';
 import { useDistributionEvents } from '@/hooks/useDistributionEvents';
 import { useSorobanContract } from '@/hooks/useSorobanContract';
@@ -10,6 +11,7 @@ import { useClipboard } from '@/hooks/useClipboard';
 import TransactionStatusCard from '@/components/TransactionStatusCard';
 import ErrorBanner from '@/components/ErrorBanner';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
+import Button from '@/components/Button';
 import { truncateAddress, formatTimestamp, formatRelativeTime } from '@/lib/stellar';
 import type { AppError } from '@/lib/errors';
 
@@ -66,67 +68,91 @@ export default function SplitDetailPage() {
   };
 
   // Distribution preview
-  const previewPayouts = amount && parseFloat(amount) > 0
-    ? recipients.map((r) => ({
-        address: r.address,
-        amount: ((parseFloat(amount) * r.share) / 100).toFixed(2),
-      }))
-    : [];
+  const previewPayouts =
+    amount && parseFloat(amount) > 0
+      ? recipients.map((r) => ({
+          address: r.address,
+          amount: ((parseFloat(amount) * r.share) / 100).toFixed(2),
+        }))
+      : [];
 
   if (isLoading) {
     return (
-      <div className="container py-16">
+      <div className="container py-14">
         <LoadingSkeleton count={3} />
       </div>
     );
   }
 
-  // Desktop layout
+  const isProcessing =
+    txState.status !== 'idle' && txState.status !== 'failed' && txState.status !== 'success';
+
   const renderOverviewPanel = () => (
-    <div>
-      <div className="glass-card mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-bold font-mono text-accent" style={{ fontSize: '20px' }}>{splitId}</h2>
-          <span className="px-2.5 py-1 rounded-full text-xs font-medium" style={{ background: 'rgba(0,255,0,0.1)', color: 'var(--success)' }}>Active</span>
+    <div className="flex flex-col gap-5">
+      <div className="glass-card p-7">
+        <div className="mb-6 flex items-center justify-between gap-3">
+          <h1 className="font-mono text-xl font-semibold text-iris-cyan">{splitId}</h1>
+          <span className="shrink-0 rounded-full border border-accent/25 bg-accent/10 px-2.5 py-1 text-[11px] font-medium text-accent">
+            Active
+          </span>
         </div>
-        <div className="text-secondary mb-1" style={{ fontSize: '14px' }}>Owner</div>
-        <div className="font-mono mb-4" style={{ fontSize: '12px' }}>{truncateAddress(owner, 8)}</div>
-        <div className="text-secondary mb-1" style={{ fontSize: '14px' }}>Total Distributed</div>
-        <motion.div
-          key={totalDistributed}
-          initial={{ scale: 1.1 }}
-          animate={{ scale: 1 }}
-          className="font-mono font-bold"
-          style={{ fontSize: '24px' }}
-        >
-          ${totalDistributed}
-        </motion.div>
+
+        <dl className="grid gap-5 sm:grid-cols-2">
+          <div>
+            <dt className="mb-1.5 text-xs text-text-muted">Owner</dt>
+            <dd className="font-mono text-sm text-white">{truncateAddress(owner, 8)}</dd>
+          </div>
+          <div>
+            <dt className="mb-1.5 text-xs text-text-muted">Total distributed</dt>
+            <motion.dd
+              key={totalDistributed}
+              initial={{ scale: 1.06 }}
+              animate={{ scale: 1 }}
+              className="font-mono text-2xl font-bold tracking-tight text-white"
+            >
+              ${totalDistributed}
+            </motion.dd>
+          </div>
+        </dl>
       </div>
 
       {/* Recipient table */}
-      <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div className="px-5 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
-          <h3 className="font-medium text-secondary" style={{ fontSize: '14px' }}>Recipients</h3>
+      <div className="glass-card overflow-hidden">
+        <div className="border-b border-border px-6 py-4">
+          <h2 className="text-[13px] font-medium uppercase tracking-wider text-text-secondary">
+            Recipients
+          </h2>
         </div>
-        <div className="flex-col">
+        <div>
           {recipients.map((r, i) => (
-            <div key={i} className="flex items-center justify-between px-5 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
+            <div
+              key={i}
+              className="flex items-center justify-between gap-4 border-b border-border px-6 py-4 last:border-0"
+            >
               <button
                 onClick={() => copyAddress(r.address)}
                 title="Copy address"
-                className="flex items-center gap-1.5 group text-left"
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
+                className="group flex min-w-0 items-center gap-2 text-left"
               >
-                <span className="font-mono transition-colors group-hover:text-accent" style={{ fontSize: '12px' }}>
+                <span className="truncate font-mono text-xs text-text-secondary transition-colors group-hover:text-white">
                   {truncateAddress(r.address, 8)}
                 </span>
-                <span className="transition-colors group-hover:text-accent text-secondary" style={{ fontSize: '12px' }}>
-                  {addressCopied ? '✓' : '⎘'}
-                </span>
+                {addressCopied ? (
+                  <Check size={12} className="shrink-0 text-accent" />
+                ) : (
+                  <Copy
+                    size={12}
+                    className="shrink-0 text-text-muted transition-colors group-hover:text-white"
+                  />
+                )}
               </button>
-              <div className="flex items-center gap-4 text-right">
-                <span className="font-mono text-accent" style={{ fontSize: '14px' }}>{r.share}%</span>
-                <span className="font-mono text-secondary" style={{ fontSize: '14px' }}>${r.lastReceived}</span>
+              <div className="flex shrink-0 items-center gap-5">
+                <span className="font-mono text-sm font-medium text-iris-mint">
+                  {r.share}%
+                </span>
+                <span className="font-mono text-sm text-text-secondary">
+                  ${r.lastReceived}
+                </span>
               </div>
             </div>
           ))}
@@ -136,69 +162,86 @@ export default function SplitDetailPage() {
   );
 
   const renderSendPanel = () => (
-    <div className="glass-card">
-      <h3 className="font-semibold mb-4" style={{ fontSize: '16px' }}>Send Payment</h3>
+    <div className="glass-card p-7">
+      <h2 className="mb-5 text-[15px] font-semibold tracking-tight text-white">
+        Send payment
+      </h2>
 
       {!isConnected ? (
-        <div className="text-center py-6">
-          <p className="text-secondary mb-3" style={{ fontSize: '14px' }}>Connect your wallet to send a payment.</p>
-          <button onClick={connect} className="btn btn-primary">Connect Wallet</button>
+        <div className="py-6 text-center">
+          <p className="mb-5 text-sm text-text-secondary">
+            Connect your wallet to send a payment.
+          </p>
+          <Button onClick={connect} className="w-full">
+            Connect wallet
+          </Button>
         </div>
       ) : (
         <>
-          <div className="mb-4">
-            <label className="block text-secondary mb-2" style={{ fontSize: '14px' }}>Amount (USDC)</label>
+          <div className="form-group">
+            <label htmlFor="dist-amount" className="form-label">
+              Amount (USDC)
+            </label>
             <input
+              id="dist-amount"
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.00"
               min="0"
               step="0.01"
-              className="input-field font-mono w-full"
-              style={{ fontSize: '18px' }}
+              className="input-field font-mono !text-lg"
             />
           </div>
 
-          {/* Preview breakdown */}
           {previewPayouts.length > 0 && (
-            <div className="mb-4 p-3 glass-card">
-              <p className="text-secondary mb-2" style={{ fontSize: '12px' }}>Distribution Preview</p>
-              {previewPayouts.map((p, i) => (
-                <div key={i} className="flex justify-between py-1">
-                  <span className="font-mono text-secondary" style={{ fontSize: '12px' }}>{truncateAddress(p.address, 6)}</span>
-                  <span className="font-mono text-accent" style={{ fontSize: '12px' }}>${p.amount}</span>
-                </div>
-              ))}
+            <div className="mb-5 rounded-2xl border border-border bg-bg-surface/60 p-4">
+              <p className="mb-3 text-xs text-text-muted">Distribution preview</p>
+              <div className="flex flex-col gap-2">
+                {previewPayouts.map((p, i) => (
+                  <div key={i} className="flex justify-between text-xs">
+                    <span className="font-mono text-text-secondary">
+                      {truncateAddress(p.address, 6)}
+                    </span>
+                    <span className="font-mono font-medium text-iris-mint">
+                      ${p.amount}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
           {error && (
-            <div className="mb-4">
+            <div className="mb-5">
               <ErrorBanner error={error} onDismiss={() => setError(null)} />
             </div>
           )}
 
-          <TransactionStatusCard
-            status={txState.status}
-            hash={txState.hash}
-            error={txState.error}
-          />
+          {txState.status !== 'idle' && (
+            <div className="mb-5">
+              <TransactionStatusCard
+                status={txState.status}
+                hash={txState.hash}
+                error={txState.error}
+              />
+            </div>
+          )}
 
-          <button
+          <Button
             onClick={handleDistribute}
-            disabled={!amount || parseFloat(amount) <= 0 || (txState.status !== 'idle' && txState.status !== 'failed' && txState.status !== 'success')}
-            className="btn btn-primary w-full mt-4"
+            disabled={!amount || parseFloat(amount) <= 0 || isProcessing}
+            isLoading={isProcessing}
+            size="lg"
+            className="w-full"
           >
-            {txState.status === 'idle' || txState.status === 'success' || txState.status === 'failed'
-              ? 'Distribute USDC'
-              : 'Processing...'}
-          </button>
+            {isProcessing ? 'Processing…' : 'Distribute USDC'}
+          </Button>
 
           {txState.status === 'success' && (
-            <button onClick={reset} className="btn btn-secondary w-full mt-2">
-              Send Another Payment
-            </button>
+            <Button variant="outline" onClick={reset} className="mt-3 w-full">
+              Send another payment
+            </Button>
           )}
         </>
       )}
@@ -206,47 +249,61 @@ export default function SplitDetailPage() {
   );
 
   const renderActivityPanel = () => (
-    <div className="glass-card">
-      <div className="flex items-center gap-2 mb-4">
-        <span className="w-2 h-2 rounded-full bg-accent animate-pulse-teal" />
-        <h3 className="font-medium text-secondary" style={{ fontSize: '14px' }}>Live Activity</h3>
+    <div className="glass-card p-7">
+      <div className="mb-5 flex items-center gap-2.5">
+        <span className="pulse-indicator" />
+        <h2 className="text-[13px] font-medium uppercase tracking-wider text-text-secondary">
+          Live activity
+        </h2>
       </div>
-      <div className="flex-col gap-3 max-h-96 overflow-y-auto pr-2">
+
+      <div className="flex max-h-96 flex-col gap-2.5 overflow-y-auto pr-1">
         <AnimatePresence>
           {events.map((event, i) => (
             <motion.div
               key={event.id}
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 12 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className="glass-card mb-3" style={{ padding: 0, overflow: 'hidden' }}
+              transition={{ delay: i * 0.04 }}
+              className="overflow-hidden rounded-2xl border border-border bg-bg-surface/50"
             >
               <button
-                onClick={() => setExpandedEvent(expandedEvent === event.id ? null : event.id)}
-                className="w-full p-3 flex items-center justify-between text-left transition-colors"
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
+                onClick={() =>
+                  setExpandedEvent(expandedEvent === event.id ? null : event.id)
+                }
+                className="flex w-full items-center justify-between gap-3 p-4 text-left transition-colors hover:bg-white/[0.03]"
+                aria-expanded={expandedEvent === event.id}
               >
-                <div>
-                  <span className="font-mono text-secondary" style={{ fontSize: '12px' }}>{event.sender}</span>
-                  <span className="text-secondary ml-2" style={{ fontSize: '12px' }} title={formatTimestamp(event.timestamp)}>
+                <div className="flex min-w-0 flex-col">
+                  <span className="truncate font-mono text-xs text-text-secondary">
+                    {event.sender}
+                  </span>
+                  <span
+                    className="mt-0.5 text-xs text-text-muted"
+                    title={formatTimestamp(event.timestamp)}
+                  >
                     {formatRelativeTime(event.timestamp)}
                   </span>
                 </div>
-                <span className="font-mono font-medium text-accent" style={{ fontSize: '14px' }}>${event.totalAmount}</span>
+                <span className="shrink-0 font-mono text-sm font-medium text-iris-mint">
+                  ${event.totalAmount}
+                </span>
               </button>
+
               <AnimatePresence>
                 {expandedEvent === event.id && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    className="border-t border-border/30 bg-bg-surface/30"
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden border-t border-border bg-black/30"
                   >
-                    <div className="flex-col gap-1 p-3">
+                    <div className="flex flex-col gap-2 p-4">
                       {event.recipients.map((r, j) => (
-                        <div key={j} className="flex justify-between" style={{ fontSize: '12px' }}>
-                          <span className="font-mono text-secondary">{r.address}</span>
-                          <span className="font-mono text-secondary">${r.amount}</span>
+                        <div key={j} className="flex justify-between text-xs">
+                          <span className="font-mono text-text-muted">{r.address}</span>
+                          <span className="font-mono text-text-secondary">${r.amount}</span>
                         </div>
                       ))}
                     </div>
@@ -261,41 +318,38 @@ export default function SplitDetailPage() {
   );
 
   return (
-    <div className="container py-16">
+    <div className="container py-14">
       {/* Mobile tab bar */}
-      <div className="md:hidden flex border border-border rounded-lg overflow-hidden mb-6">
+      <div className="mb-6 flex gap-1 rounded-full border border-border bg-bg-surface/60 p-1 md:hidden">
         {(['overview', 'send', 'activity'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setMobileTab(tab)}
-            className={`flex-1 py-2.5 font-medium capitalize transition-colors ${
+            className={`flex-1 rounded-full py-2.5 text-sm font-medium capitalize transition-colors ${
               mobileTab === tab
-                ? 'bg-accent'
-                : 'glass-card text-secondary'
+                ? 'bg-white text-black'
+                : 'text-text-secondary hover:text-white'
             }`}
-            style={{ fontSize: '14px', border: 'none' }}
           >
             {tab}
           </button>
         ))}
       </div>
 
-      {/* Mobile: show active tab */}
+      {/* Mobile: active tab */}
       <div className="md:hidden">
         {mobileTab === 'overview' && renderOverviewPanel()}
         {mobileTab === 'send' && renderSendPanel()}
         {mobileTab === 'activity' && renderActivityPanel()}
       </div>
 
-      {/* Desktop: side by side layout */}
-      <div className="hidden md:grid md:grid-cols-5 gap-6">
-        <div className="col-span-3 space-y-6">
+      {/* Desktop: side-by-side */}
+      <div className="hidden gap-6 md:grid md:grid-cols-5">
+        <div className="col-span-3 flex flex-col gap-5">
           {renderOverviewPanel()}
           {renderActivityPanel()}
         </div>
-        <div className="col-span-2">
-          {renderSendPanel()}
-        </div>
+        <div className="col-span-2">{renderSendPanel()}</div>
       </div>
     </div>
   );

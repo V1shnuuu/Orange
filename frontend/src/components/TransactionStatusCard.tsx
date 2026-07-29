@@ -1,6 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'motion/react';
+import { Loader2, Check, CheckCheck, X } from 'lucide-react';
 import type { TxStatus } from '@/lib/contracts';
 import { stellarExpertTxUrl } from '@/lib/stellar';
 
@@ -10,16 +11,42 @@ interface TransactionStatusCardProps {
   error?: string;
 }
 
-const STATUS_CONFIG: Record<TxStatus, { label: string; color: string; bgColor: string; icon: string }> = {
-  idle: { label: '', color: '', bgColor: '', icon: '' },
-  simulating: { label: 'Simulating transaction...', color: 'text-accent', bgColor: 'bg-accent/5 border-accent/20', icon: '⏳' },
-  pending: { label: 'Waiting for confirmation...', color: 'text-warning', bgColor: 'bg-warning-bg border-warning/20', icon: '🔄' },
-  confirmed: { label: 'Transaction confirmed', color: 'text-accent', bgColor: 'bg-success-bg border-success/20', icon: '✓' },
-  success: { label: 'Transaction successful!', color: 'text-success', bgColor: 'bg-success-bg border-success/20', icon: '✅' },
-  failed: { label: 'Transaction failed', color: 'text-error', bgColor: 'bg-error-bg border-error/20', icon: '✗' },
+const STATUS_CONFIG: Record<
+  Exclude<TxStatus, 'idle'>,
+  { label: string; tone: string; icon: React.ReactNode }
+> = {
+  simulating: {
+    label: 'Simulating transaction…',
+    tone: 'border-border bg-bg-surface text-text-secondary',
+    icon: <Loader2 size={16} className="animate-spin" />,
+  },
+  pending: {
+    label: 'Waiting for confirmation…',
+    tone: 'border-warning/25 bg-warning/8 text-warning',
+    icon: <Loader2 size={16} className="animate-spin" />,
+  },
+  confirmed: {
+    label: 'Transaction confirmed',
+    tone: 'border-accent/25 bg-accent/8 text-accent',
+    icon: <Check size={16} />,
+  },
+  success: {
+    label: 'Transaction successful',
+    tone: 'border-accent/30 bg-accent/10 text-accent',
+    icon: <CheckCheck size={16} />,
+  },
+  failed: {
+    label: 'Transaction failed',
+    tone: 'border-error/30 bg-error/10 text-error',
+    icon: <X size={16} />,
+  },
 };
 
-export default function TransactionStatusCard({ status, hash, error }: TransactionStatusCardProps) {
+export default function TransactionStatusCard({
+  status,
+  hash,
+  error,
+}: TransactionStatusCardProps) {
   if (status === 'idle') return null;
 
   const config = STATUS_CONFIG[status];
@@ -28,37 +55,25 @@ export default function TransactionStatusCard({ status, hash, error }: Transacti
     <AnimatePresence mode="wait">
       <motion.div
         key={status}
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
-        transition={{ duration: 0.2 }}
-        className={`rounded-lg border p-4 ${config.bgColor}`}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+        className={`flex items-start gap-3 rounded-2xl border p-4 ${config.tone}`}
       >
-        <div className="flex items-center gap-3">
-          <span className="text-lg">{config.icon}</span>
-          <div className="flex-1">
-            <p className={`text-sm font-medium ${config.color}`}>
-              {config.label}
-            </p>
-            {error && (
-              <p className="text-xs text-error mt-1">{error}</p>
-            )}
-            {hash && status === 'success' && (
-              <a
-                href={stellarExpertTxUrl(hash)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-accent hover:underline mt-1 inline-block font-mono"
-              >
-                View on Stellar Expert →
-              </a>
-            )}
-          </div>
-          {(status === 'simulating' || status === 'pending') && (
-            <svg className="animate-spin h-4 w-4 text-accent" viewBox="0 0 24 24" fill="none">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
+        <span className="mt-0.5 shrink-0">{config.icon}</span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium">{config.label}</p>
+          {error && <p className="mt-1 text-xs opacity-80">{error}</p>}
+          {hash && status === 'success' && (
+            <a
+              href={stellarExpertTxUrl(hash)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1.5 inline-block font-mono text-xs underline-offset-2 hover:underline"
+            >
+              View on Stellar Expert →
+            </a>
           )}
         </div>
       </motion.div>

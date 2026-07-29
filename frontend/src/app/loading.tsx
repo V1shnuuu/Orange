@@ -2,10 +2,10 @@ import LoadingSkeleton from '@/components/LoadingSkeleton';
 
 export default function Loading() {
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <div className="h-8 w-1/3 bg-bg-surface animate-pulse rounded-md mb-3" />
-        <div className="h-4 w-1/2 bg-bg-surface animate-pulse rounded-md" />
+    <div className="container py-14">
+      <div className="mb-10">
+        <div className="skeleton mb-3 h-8 w-1/3" />
+        <div className="skeleton h-4 w-1/2" />
       </div>
       <LoadingSkeleton count={3} />
     </div>

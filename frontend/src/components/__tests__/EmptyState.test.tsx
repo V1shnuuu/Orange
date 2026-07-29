@@ -15,7 +15,7 @@ describe('EmptyState', () => {
 
   it('renders default icon if not provided', () => {
     render(<EmptyState title="Title" />);
-    expect(screen.getByText('🔍')).toBeTruthy();
+    expect(screen.getByText('○')).toBeTruthy();
   });
 
   it('renders custom icon if provided', () => {

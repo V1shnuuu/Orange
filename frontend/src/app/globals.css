@@ -1,49 +1,130 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
 
-:root {
-  --bg-primary: #050505;
-  --bg-secondary: #0a0a0a;
-  --bg-surface: rgba(20, 20, 20, 0.7);
-  --bg-surface-hover: rgba(30, 30, 30, 0.8);
-  --bg-card: rgba(15, 15, 15, 0.6);
-  --accent: #00e5ff;
-  --accent-dim: #00b3cc;
-  --accent-glow: rgba(0, 229, 255, 0.2);
-  --accent-glow-strong: rgba(0, 229, 255, 0.4);
-  --text-primary: #ffffff;
-  --text-secondary: #b3b3b3;
-  --text-muted: #808080;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-hover: rgba(255, 255, 255, 0.15);
-  --error: #ff4d4d;
-  --error-bg: rgba(255, 77, 77, 0.1);
-  --success: #00e5ff;
-  --success-bg: rgba(0, 229, 255, 0.1);
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+/* ============================================================
+   DESIGN TOKENS
+   Iridescent-on-black identity. Single source of truth for
+   color, radius, shadow, and motion. Tailwind v4 reads @theme
+   and generates utilities (bg-surface, text-muted, etc.).
+   ============================================================ */
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Brand — iridescent stops */
+  --color-iris-mint: #7ef7c4;
+  --color-iris-cyan: #6fd3f7;
+  --color-iris-blue: #8fb4ff;
+  --color-iris-lavender: #b9a6ff;
+  --color-iris-pink: #eaa6f0;
+
+  /* Primary action */
+  --color-accent: #86ef7a;
+  --color-accent-hover: #9df593;
+  --color-accent-dim: #6bd45f;
+
+  /* Semantic */
+  --color-success: #86ef7a;
+  --color-success-bg: color-mix(in oklab, #86ef7a 12%, transparent);
+  --color-warning: #f5c451;
+  --color-warning-bg: color-mix(in oklab, #f5c451 12%, transparent);
+  --color-error: #ff6b81;
+  --color-error-bg: color-mix(in oklab, #ff6b81 12%, transparent);
+  --color-info: #8fb4ff;
+  --color-info-bg: color-mix(in oklab, #8fb4ff 12%, transparent);
+
+  /* Surfaces — near-pure black canvas */
+  --color-bg-primary: #000000;
+  --color-bg-secondary: #08080a;
+  --color-bg-surface: #101013;
+  --color-bg-surface-hover: #17171c;
+  --color-bg-card: #0b0b0e;
+  --color-bg-elevated: #141419;
+
+  /* Text */
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #a1a1aa;
+  --color-text-muted: #6b6b75;
+
+  /* Borders */
+  --color-border: rgba(255, 255, 255, 0.09);
+  --color-border-hover: rgba(255, 255, 255, 0.18);
+  --color-border-strong: rgba(255, 255, 255, 0.28);
+
+  /* Radius — pill-forward */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-pill: 999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.6);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.65);
+  --shadow-nav: 0 8px 32px rgba(0, 0, 0, 0.55);
+
+  /* Motion */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-* {
+/* Iridescent gradient, reused everywhere */
+:root {
+  --gradient-iris: linear-gradient(
+    100deg,
+    var(--color-iris-mint) 0%,
+    var(--color-iris-cyan) 28%,
+    var(--color-iris-blue) 52%,
+    var(--color-iris-lavender) 74%,
+    var(--color-iris-pink) 100%
+  );
+  --gradient-iris-soft: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--color-iris-mint) 55%, white) 0%,
+    color-mix(in oklab, var(--color-iris-cyan) 55%, white) 30%,
+    color-mix(in oklab, var(--color-iris-lavender) 55%, white) 65%,
+    color-mix(in oklab, var(--color-iris-pink) 55%, white) 100%
+  );
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
 html {
-  background: var(--bg-primary);
-  color: var(--text-primary);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
   height: 100%;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }
 
 body {
-  background: var(--bg-primary);
-  color: var(--text-primary);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100%;
-  display: flex;
-  flex-direction: column;
 }
 
 .app-body {
@@ -56,34 +137,43 @@ body {
   flex: 1;
 }
 
-/* Scrollbar */
+::selection {
+  background: color-mix(in oklab, var(--color-iris-lavender) 40%, transparent);
+  color: #fff;
+}
+
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
+  height: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-primary);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 4px;
+  background: var(--color-border);
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--color-bg-primary);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: var(--color-border-strong);
 }
 
-/* Animations */
+:focus-visible {
+  outline: 2px solid var(--color-iris-cyan);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ============================================================
+   KEYFRAMES
+   ============================================================ */
 @keyframes pulse-accent {
-  0%, 100% { opacity: 0.6; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.05); }
-}
-
-@keyframes glow {
-  0%, 100% { box-shadow: 0 0 20px var(--accent-glow); }
-  50% { box-shadow: 0 0 40px var(--accent-glow-strong); }
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.35); }
 }
 
 @keyframes fade-in-up {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(18px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -92,161 +182,338 @@ body {
   50% { transform: translateY(-10px); }
 }
 
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@keyframes iris-drift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Slow wander for the ambient background blooms */
+@keyframes bloom-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33% { transform: translate3d(6%, -4%, 0) scale(1.12); }
+  66% { transform: translate3d(-5%, 5%, 0) scale(0.94); }
+}
+
 .animate-fade-in-up {
-  animation: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fade-in-up 0.55s var(--ease-spring) forwards;
 }
 
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
 
-/* Typography Utilities */
-.text-center { text-align: center; }
-.text-primary { color: var(--text-primary); }
-.text-secondary { color: var(--text-secondary); }
-.text-accent { color: var(--accent); }
-.font-bold { font-weight: 700; }
-.font-semibold { font-weight: 600; }
-.font-medium { font-weight: 500; }
-.font-mono { font-family: var(--font-mono); }
+.animate-pulse-teal {
+  animation: pulse-accent 2s ease-in-out infinite;
+}
 
-/* Layout Utilities */
+/* ============================================================
+   IRIDESCENT UTILITIES
+   ============================================================ */
+.text-iris {
+  background: var(--gradient-iris);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: iris-drift 9s ease-in-out infinite;
+}
+
+/* Ghost/outline display text layered behind the gradient headline */
+.text-outline {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.14);
+}
+
+.bg-iris {
+  background: var(--gradient-iris);
+}
+
+.bg-iris-soft {
+  background: var(--gradient-iris-soft);
+}
+
+/* Subtle grain overlay for gradient surfaces */
+.grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.16;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Ambient gradient bloom behind hero sections */
+.iris-bloom {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.28;
+  pointer-events: none;
+  background: var(--gradient-iris);
+  background-size: 200% 200%;
+  will-change: transform;
+  animation:
+    bloom-drift 26s ease-in-out infinite,
+    iris-drift 18s ease-in-out infinite;
+}
+
+/* Blooms centred via translateX(-50%) need the offset baked into the
+   keyframes, otherwise the animation's transform overrides the centring. */
+.iris-bloom-centered {
+  animation:
+    bloom-drift-centered 26s ease-in-out infinite,
+    iris-drift 18s ease-in-out infinite;
+}
+
+@keyframes bloom-drift-centered {
+  0%, 100% { transform: translate3d(-50%, 0, 0) scale(1); }
+  33% { transform: translate3d(-44%, -4%, 0) scale(1.12); }
+  66% { transform: translate3d(-55%, 5%, 0) scale(0.94); }
+}
+
+/* Slow aurora wash layered over the page background */
+@keyframes aurora-shift {
+  0%, 100% {
+    transform: translate3d(-6%, -3%, 0) rotate(0deg) scale(1.15);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate3d(6%, 4%, 0) rotate(8deg) scale(1.35);
+    opacity: 0.8;
+  }
+}
+
+.aurora {
+  position: absolute;
+  inset: -25%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(90px);
+  opacity: 0.5;
+  background:
+    radial-gradient(38% 46% at 22% 34%, color-mix(in oklab, var(--color-iris-mint) 42%, transparent), transparent 70%),
+    radial-gradient(42% 38% at 72% 26%, color-mix(in oklab, var(--color-iris-lavender) 38%, transparent), transparent 72%),
+    radial-gradient(34% 42% at 54% 70%, color-mix(in oklab, var(--color-iris-cyan) 32%, transparent), transparent 70%);
+  animation: aurora-shift 30s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Viewport-anchored variant, mounted once at the app root so the
+   gradient wash sits behind the nav too — no seam where the sticky
+   header meets a page section that starts its own background. */
+.aurora-fixed {
+  position: fixed;
+  inset: -25% -25% 0 -25%;
+  height: 85vh;
+}
+
+/* ============================================================
+   LAYOUT + SURFACES
+   ============================================================ */
 .container {
   max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 24px;
+  margin-inline: auto;
+  padding-inline: 24px;
 }
 
-.flex { display: flex; }
-.flex-col { flex-direction: column; }
-.items-center { align-items: center; }
-.justify-center { justify-content: center; }
-.justify-between { justify-content: space-between; }
-.gap-2 { gap: 8px; }
-.gap-3 { gap: 12px; }
-.gap-4 { gap: 16px; }
-.gap-6 { gap: 24px; }
-.gap-8 { gap: 32px; }
-.gap-12 { gap: 48px; }
-.mt-4 { margin-top: 16px; }
-.mt-8 { margin-top: 32px; }
-.mb-2 { margin-bottom: 8px; }
-.mb-4 { margin-bottom: 16px; }
-.mb-8 { margin-bottom: 32px; }
-.py-16 { padding-top: 64px; padding-bottom: 64px; }
-.py-24 { padding-top: 96px; padding-bottom: 96px; }
-
-/* Grid */
-.grid { display: grid; }
-.grid-cols-1 { grid-template-columns: 1fr; }
-@media (min-width: 768px) {
-  .md\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
-  .md\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
-  .md\:flex-row { flex-direction: row; }
-}
-
-/* Glassmorphism Cards */
 .glass-card {
-  background: var(--bg-card);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 24px;
-  transition: all 0.3s ease;
-}
-.glass-card:hover {
-  border-color: var(--accent-glow);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  transform: translateY(-4px);
+  position: relative;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  transition: border-color 0.3s var(--ease-out-quart),
+    box-shadow 0.3s var(--ease-out-quart),
+    transform 0.3s var(--ease-out-quart);
 }
 
-/* Buttons */
+.glass-card-hoverable:hover {
+  border-color: var(--color-border-hover);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-3px);
+}
+
+/* Card with an iridescent edge, used for feature/product surfaces */
+.iris-card {
+  position: relative;
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-card);
+  border: 1px solid transparent;
+  background-image: linear-gradient(var(--color-bg-card), var(--color-bg-card)),
+    var(--gradient-iris);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-surface) 25%,
+    var(--color-bg-surface-hover) 50%,
+    var(--color-bg-surface) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+/* ============================================================
+   TYPOGRAPHY
+   ============================================================ */
+.display-xl {
+  font-size: clamp(3rem, 9vw, 7rem);
+  font-weight: 800;
+  line-height: 0.94;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+}
+
+.display-lg {
+  font-size: clamp(2.25rem, 5.5vw, 4rem);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+}
+
+.display-md {
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+/* App-screen headings stay calmer than marketing display type */
+.heading-page {
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+
+.hero-title {
+  font-size: clamp(2.5rem, 5vw, 4.25rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+
+.hero-subtitle {
+  font-size: 1.0625rem;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+  max-width: 500px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--color-text-secondary);
+}
+
+/* ============================================================
+   BUTTONS (legacy class API, restyled to pill identity)
+   ============================================================ */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 24px;
-  border-radius: 8px;
+  gap: 8px;
+  height: 46px;
+  padding: 0 26px;
+  border-radius: var(--radius-pill);
   font-weight: 600;
-  font-size: 15px;
+  font-size: 0.9375rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.22s var(--ease-out-quart);
   text-decoration: none;
+  border: none;
+  white-space: nowrap;
+}
+.btn:disabled {
+  opacity: 0.4;
+  pointer-events: none;
 }
 .btn-primary {
-  background: var(--accent);
-  color: #000;
-  border: none;
-  box-shadow: 0 0 15px var(--accent-glow);
+  background: var(--color-accent);
+  color: #04120a;
 }
 .btn-primary:hover {
-  background: var(--accent-dim);
-  box-shadow: 0 0 25px var(--accent-glow-strong);
-  transform: translateY(-2px);
+  background: var(--color-accent-hover);
+  transform: translateY(-1px);
 }
 .btn-secondary {
-  background: transparent;
-  color: var(--text-primary);
-  border: 1px solid var(--border);
+  background: #ffffff;
+  color: #000000;
 }
 .btn-secondary:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  background: #e9e9ec;
+  transform: translateY(-1px);
 }
 
-/* Forms */
+/* ============================================================
+   FORMS
+   ============================================================ */
 .form-group {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 .form-label {
   display: block;
-  font-size: 14px;
+  font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--color-text-secondary);
   margin-bottom: 8px;
 }
 .input-field {
   width: 100%;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   padding: 12px 16px;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
   font-family: var(--font-sans);
-  font-size: 15px;
-  transition: all 0.2s ease;
+  font-size: 0.9375rem;
+  transition: all 0.2s var(--ease-out-quart);
 }
 .input-field:focus {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-glow);
+  border-color: color-mix(in oklab, var(--color-iris-cyan) 60%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-iris-cyan) 18%, transparent);
 }
 .input-field::placeholder {
-  color: var(--text-muted);
+  color: var(--color-text-muted);
 }
 
-/* Hero Section */
-.hero-title {
-  font-size: clamp(2.5rem, 5vw, 4.5rem);
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+/* ============================================================
+   LEGACY COLOR ALIASES
+   Older markup uses bare .text-primary/.text-secondary rather
+   than Tailwind's generated .text-text-primary/.text-text-secondary.
+   ============================================================ */
+.text-primary {
+  color: var(--color-text-primary);
 }
-.hero-subtitle {
-  font-size: 1.125rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  max-width: 540px;
+.text-secondary {
+  color: var(--color-text-secondary);
 }
 
-/* Specific UI */
+/* ============================================================
+   MISC APP BITS
+   ============================================================ */
 .live-feed-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border);
+  padding: 14px 0;
+  border-bottom: 1px solid var(--color-border);
 }
 .live-feed-item:last-child {
   border-bottom: none;
@@ -255,75 +522,32 @@ body {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--color-accent);
   animation: pulse-accent 2s infinite;
 }
 
-/* Nav styles */
+/* ============================================================
+   NAV — floating pill bar
+   ============================================================ */
 .nav-header {
   position: sticky;
   top: 0;
   z-index: 50;
-  border-bottom: 1px solid var(--border);
-  background: rgba(5, 5, 5, 0.8);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  padding: 16px 24px 0;
 }
+
 .nav-container {
   max-width: 1200px;
-  margin: 0 auto;
-  padding: 12px 24px;
+  margin-inline: auto;
+  padding: 10px 10px 10px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
-.nav-logo {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  text-decoration: none;
-}
-.nav-logo-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: rgba(0, 229, 255, 0.1);
-  border: 1px solid rgba(0, 229, 255, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-.nav-logo:hover .nav-logo-icon {
-  background: rgba(0, 229, 255, 0.2);
-}
-.nav-logo-text {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: -0.02em;
-}
-.nav-links {
-  display: none;
-}
-@media (min-width: 768px) {
-  .nav-links {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-  }
-}
-.nav-link {
-  font-size: 0.875rem;
-  font-weight: 500;
-  text-decoration: none;
-  transition: color 0.2s;
-}
-.nav-link.active { color: var(--accent); }
-.nav-link:not(.active) { color: var(--text-secondary); }
-.nav-link:not(.active):hover { color: var(--text-primary); }
-.nav-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  gap: 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border);
+  background: color-mix(in oklab, var(--color-bg-surface) 78%, transparent);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-nav);
 }

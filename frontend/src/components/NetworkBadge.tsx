@@ -11,15 +11,15 @@ export default function NetworkBadge() {
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium ${
         isTestnet
-          ? 'bg-warning-bg text-warning border border-warning/20'
-          : 'bg-success-bg text-success border border-success/20'
+          ? 'border-warning/25 bg-warning/10 text-warning'
+          : 'border-accent/25 bg-accent/10 text-accent'
       }`}
       title={`Connected to Stellar ${NETWORK}`}
     >
       <span
-        className={`w-1.5 h-1.5 rounded-full ${isTestnet ? 'bg-warning' : 'bg-success'}`}
+        className={`h-1.5 w-1.5 rounded-full ${isTestnet ? 'bg-warning' : 'bg-accent'}`}
       />
       {isTestnet ? 'Testnet' : 'Mainnet'}
     </span>

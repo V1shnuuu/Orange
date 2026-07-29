@@ -26,14 +26,14 @@ describe('TransactionStatusCard', () => {
 
   it('renders Pending state correctly', () => {
     render(<TransactionStatusCard status="pending" />);
-    expect(screen.getByText('Waiting for confirmation...')).toBeInTheDocument();
+    expect(screen.getByText('Waiting for confirmation…')).toBeInTheDocument();
   });
 
   it('renders Success state with Stellar Expert link', () => {
     render(
       <TransactionStatusCard status="success" hash="abc123def456" />
     );
-    expect(screen.getByText('Transaction successful!')).toBeInTheDocument();
+    expect(screen.getByText('Transaction successful')).toBeInTheDocument();
     expect(screen.getByText('View on Stellar Expert →')).toBeInTheDocument();
   });
 
@@ -47,6 +47,6 @@ describe('TransactionStatusCard', () => {
 
   it('renders Simulating state correctly', () => {
     render(<TransactionStatusCard status="simulating" />);
-    expect(screen.getByText('Simulating transaction...')).toBeInTheDocument();
+    expect(screen.getByText('Simulating transaction…')).toBeInTheDocument();
   });
 });

@@ -28,7 +28,7 @@ describe('ErrorBanner', () => {
     };
 
     render(<ErrorBanner error={error} />);
-    expect(screen.getByText('Wallet Required')).toBeInTheDocument();
+    expect(screen.getByText('Wallet required')).toBeInTheDocument();
     expect(screen.getByText('Freighter')).toBeInTheDocument();
     expect(screen.getByText('xBull')).toBeInTheDocument();
     expect(screen.getByText('Albedo')).toBeInTheDocument();
@@ -65,7 +65,7 @@ describe('ErrorBanner', () => {
     };
 
     render(<ErrorBanner error={error} />);
-    expect(screen.getByText('Contract Error')).toBeInTheDocument();
+    expect(screen.getByText('Contract error')).toBeInTheDocument();
     expect(screen.getByText('Shares must sum to exactly 100%.')).toBeInTheDocument();
   });
 

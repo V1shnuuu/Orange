@@ -1,6 +1,9 @@
 'use client';
 
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
+import { useMemo } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { useCircleContracts } from '@/hooks/useCircleContracts';
 import { useWallet } from '@/components/WalletProvider';
 import { formatAmount } from '@/lib/stellar';
@@ -10,16 +13,16 @@ import MemberCard from '@/components/MemberCard';
 import TransactionStatusCard from '@/components/TransactionStatusCard';
 import ErrorBanner from '@/components/ErrorBanner';
 import EmptyState from '@/components/EmptyState';
-import Link from 'next/link';
-import { useMemo } from 'react';
+import Button from '@/components/Button';
 
 export default function CircleDashboardPage() {
   const params = useParams();
   const id = params.id as string;
   const { publicKey: address } = useWallet();
-  const { circles, joinCircle, contributeToCircle, txState, resetTxState } = useCircleContracts();
-  
-  const circle = circles.find(c => c.id === id);
+  const { circles, joinCircle, contributeToCircle, txState, resetTxState } =
+    useCircleContracts();
+
+  const circle = circles.find((c) => c.id === id);
   const isMember = address ? circle?.members.includes(address) : false;
   const isFull = circle ? circle.currentMembers >= circle.maxMembers : false;
 
@@ -41,22 +44,37 @@ export default function CircleDashboardPage() {
 
   const timelineEvents = useMemo(() => {
     return [
-      { title: 'Cycle Started', description: 'Waiting for all members to contribute.', date: 'Now', status: 'completed' as const },
-      { title: 'Contributions', description: '2/5 members paid', date: 'In Progress', status: 'current' as const },
-      { title: 'Payout', description: 'To be disbursed to Member 1', date: 'End of Cycle', status: 'upcoming' as const },
+      {
+        title: 'Cycle started',
+        description: 'Waiting for all members to contribute.',
+        date: 'Now',
+        status: 'completed' as const,
+      },
+      {
+        title: 'Contributions',
+        description: '2/5 members paid',
+        date: 'In progress',
+        status: 'current' as const,
+      },
+      {
+        title: 'Payout',
+        description: 'To be disbursed to Member 1',
+        date: 'End of cycle',
+        status: 'upcoming' as const,
+      },
     ];
   }, []);
 
   if (!circle) {
     return (
-      <div className="container py-16">
+      <div className="container py-14">
         <EmptyState
-          title="Circle Not Found"
+          title="Circle not found"
           description="This circle doesn't exist or may have been removed."
-          icon="🔍"
+          icon="○"
           action={
-            <Link href="/circles" className="btn-primary">
-              Browse Circles
+            <Link href="/circles">
+              <Button>Browse circles</Button>
             </Link>
           }
         />
@@ -66,77 +84,116 @@ export default function CircleDashboardPage() {
 
   const totalPool = BigInt(circle.contributionAmount) * BigInt(circle.maxMembers);
   const currentPool = BigInt(circle.contributionAmount) * BigInt(2); // Simulated
+  const poolPercent = Number((currentPool * BigInt(100)) / totalPool);
 
   return (
-    <div className="container py-16">
+    <div className="container py-14">
+      <Link
+        href="/circles"
+        className="mb-8 inline-flex items-center gap-2 text-sm text-text-secondary transition-colors hover:text-white"
+      >
+        <ArrowLeft size={15} />
+        Back to circles
+      </Link>
+
       {txState.status === 'failed' && (
-        <div className="mb-6"><ErrorBanner error={{ message: txState.error || 'Unknown error', type: 'contract_error', retryable: false }} onDismiss={resetTxState} /></div>
-      )}
-      
-      {txState.status !== 'idle' && txState.status !== 'failed' && (
-         <div className="mb-8 max-w-md mx-auto">
-           <TransactionStatusCard status={txState.status} hash={txState.hash} error={txState.error} />
-         </div>
+        <div className="mb-6">
+          <ErrorBanner
+            error={{
+              message: txState.error || 'Unknown error',
+              type: 'contract_error',
+              retryable: false,
+            }}
+            onDismiss={resetTxState}
+          />
+        </div>
       )}
 
-      <div className="grid lg:grid-cols-3 gap-8">
-        {/* Left Column: Stats & Action */}
-        <div className="flex-col gap-6" style={{ gridColumn: 'span 1' }}>
-          <div className="glass-card text-center mb-6">
-            <h2 className="font-bold mb-2" style={{ fontSize: '24px' }}>{circle.name}</h2>
-            <p className="text-secondary mb-6" style={{ fontSize: '14px' }}>Cycle 1 of {circle.maxMembers}</p>
-            
-            <div className="flex justify-center mb-6">
-              <ProgressRing progress={40} size={160} strokeWidth={10}>
-                <span className="text-2xl font-mono font-bold text-text-primary">${formatAmount(currentPool)}</span>
-                <span className="text-xs text-text-secondary">/ ${formatAmount(totalPool)} Pool</span>
+      {txState.status !== 'idle' && txState.status !== 'failed' && (
+        <div className="mx-auto mb-8 max-w-md">
+          <TransactionStatusCard
+            status={txState.status}
+            hash={txState.hash}
+            error={txState.error}
+          />
+        </div>
+      )}
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Left column: pool + actions */}
+        <div className="flex flex-col gap-6">
+          <div className="glass-card p-7 text-center">
+            <h1 className="heading-page mb-1 text-white">{circle.name}</h1>
+            <p className="mb-7 text-sm text-text-secondary">
+              Cycle 1 of {circle.maxMembers}
+            </p>
+
+            <div className="mb-7 flex justify-center">
+              <ProgressRing progress={poolPercent} size={168} strokeWidth={10}>
+                <span className="font-mono text-2xl font-bold text-white">
+                  ${formatAmount(currentPool)}
+                </span>
+                <span className="mt-0.5 text-xs text-text-muted">
+                  of ${formatAmount(totalPool)}
+                </span>
               </ProgressRing>
             </div>
 
-            <div className="flex-col gap-3 mb-6">
-              <div className="flex justify-between" style={{ fontSize: '14px' }}>
-                <span className="text-secondary">Your Contribution</span>
-                <span className="font-mono font-medium">${formatAmount(BigInt(circle.contributionAmount))}</span>
+            <dl className="mb-7 space-y-3 text-left">
+              <div className="flex justify-between text-sm">
+                <dt className="text-text-secondary">Your contribution</dt>
+                <dd className="font-mono font-medium text-white">
+                  ${formatAmount(BigInt(circle.contributionAmount))}
+                </dd>
               </div>
-              <div className="flex justify-between" style={{ fontSize: '14px' }}>
-                <span className="text-secondary">Expected Payout</span>
-                <span className="font-mono font-bold text-accent">${formatAmount(totalPool)}</span>
+              <div className="flex justify-between text-sm">
+                <dt className="text-text-secondary">Expected payout</dt>
+                <dd className="font-mono font-semibold text-iris-mint">
+                  ${formatAmount(totalPool)}
+                </dd>
               </div>
-            </div>
+            </dl>
 
             {!isMember ? (
-              <button 
-                onClick={handleJoin} 
-                disabled={isFull} 
-                className={`btn w-full ${isFull ? 'btn-secondary' : 'btn-primary'}`}
+              <Button
+                onClick={handleJoin}
+                disabled={isFull}
+                variant={isFull ? 'outline' : 'primary'}
+                size="lg"
+                className="w-full"
               >
-                {isFull ? 'Circle Full' : 'Join Circle'}
-              </button>
+                {isFull ? 'Circle full' : 'Join circle'}
+              </Button>
             ) : (
-              <button 
-                onClick={handleContribute}
-                className="btn btn-primary w-full"
-              >
-                Pay Contribution
-              </button>
+              <Button onClick={handleContribute} size="lg" className="w-full">
+                Pay contribution
+              </Button>
             )}
           </div>
 
-          <div className="glass-card">
-            <h3 className="font-bold mb-4">Cycle Timeline</h3>
+          <div className="glass-card p-7">
+            <h2 className="mb-6 text-[15px] font-semibold tracking-tight text-white">
+              Cycle timeline
+            </h2>
             <Timeline events={timelineEvents} />
           </div>
         </div>
 
-        {/* Right Column: Members */}
-        <div className="flex-col gap-6" style={{ gridColumn: 'span 2' }}>
-          <div className="glass-card">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="font-bold">Members ({circle.currentMembers}/{circle.maxMembers})</h3>
+        {/* Right column: members */}
+        <div className="lg:col-span-2">
+          <div className="glass-card p-7">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="text-[15px] font-semibold tracking-tight text-white">
+                Members
+              </h2>
+              <span className="rounded-full border border-border bg-white/5 px-2.5 py-1 font-mono text-[11px] text-text-secondary">
+                {circle.currentMembers} / {circle.maxMembers}
+              </span>
             </div>
-            <div className="flex-col gap-4">
+
+            <div className="flex flex-col gap-3">
               {circle.members.map((member, idx) => (
-                <MemberCard 
+                <MemberCard
                   key={member}
                   address={member}
                   joinedAt={new Date()}
@@ -145,10 +202,16 @@ export default function CircleDashboardPage() {
                   isCurrentUser={address === member}
                 />
               ))}
+
               {/* Empty slots */}
-              {Array.from({ length: circle.maxMembers - circle.currentMembers }).map((_, i) => (
-                <div key={`empty-${i}`} className="flex items-center justify-center p-4" style={{ borderRadius: '12px', border: '1px dashed var(--border)', background: 'rgba(10, 10, 10, 0.3)', height: '74px' }}>
-                  <span className="text-secondary" style={{ fontSize: '14px' }}>Empty Slot</span>
+              {Array.from({
+                length: circle.maxMembers - circle.currentMembers,
+              }).map((_, i) => (
+                <div
+                  key={`empty-${i}`}
+                  className="flex h-[74px] items-center justify-center rounded-2xl border border-dashed border-border bg-bg-card/40"
+                >
+                  <span className="text-sm text-text-muted">Empty slot</span>
                 </div>
               ))}
             </div>

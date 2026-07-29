@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Nav from "@/components/Nav";
 import { WalletProvider } from "@/components/WalletProvider";
+import FeedbackFab from "@/components/FeedbackFab";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -37,9 +38,11 @@ export default function RootLayout({
       className={`${inter.variable} ${jetbrainsMono.variable} h-full`}
     >
       <body className="app-body">
+        <div className="aurora aurora-fixed" aria-hidden="true" />
         <WalletProvider>
           <Nav />
           <main className="main-content">{children}</main>
+          <FeedbackFab />
         </WalletProvider>
         <Analytics />
         <SpeedInsights />

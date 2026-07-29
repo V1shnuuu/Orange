@@ -1,123 +1,209 @@
 'use client';
 
 import Link from 'next/link';
-import { motion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
+import { Users, ShieldCheck, Zap, ArrowRight } from 'lucide-react';
 import { useWallet } from '@/components/WalletProvider';
 import { useDistributionEvents } from '@/hooks/useDistributionEvents';
 import { formatTimestamp } from '@/lib/stellar';
+import Button from '@/components/Button';
 
-// Animated SVG diagram: one payment → many recipients
-function SplitDiagram() {
+/** Organic flowing line-art that sits behind the hero headline. */
+/** Builds one flowing curve. `phase` shifts the control points to morph it. */
+function wavePath(i: number, phase: number) {
+  const y = 180 + i * 70;
+  return [
+    `M-100 ${y}`,
+    `C ${220 + i * 40} ${40 + i * 30 + phase}`,
+    `${520 - i * 30} ${420 + i * 40 - phase}`,
+    `${840 + i * 25} ${200 + i * 55 + phase * 0.6}`,
+    `S ${1180 + i * 20} ${120 + i * 40 - phase * 0.8}`,
+    `1400 ${300 + i * 30}`,
+  ].join(' ');
+}
+
+const LINES = [0, 1, 2, 3, 4];
+
+function HeroLineArt() {
+  const reduceMotion = useReducedMotion();
+
   return (
-    <svg width="320" height="200" viewBox="0 0 320 200" fill="none" className="animate-float">
-      {/* Sender node */}
-      <motion.circle
-        cx="40" cy="100" r="20"
-        fill="#00e5ff" fillOpacity="0.15"
-        stroke="#00e5ff" strokeWidth="1.5"
-        animate={{ scale: [1, 1.1, 1] }}
-        transition={{ duration: 2, repeat: Infinity }}
-      />
-      <text x="40" y="104" textAnchor="middle" fill="#ffffff" fontSize="12" className="font-mono">$</text>
+    <svg
+      className="pointer-events-none absolute inset-0 z-[1] h-full w-full"
+      viewBox="0 0 1200 700"
+      fill="none"
+      preserveAspectRatio="xMidYMid slice"
+      aria-hidden="true"
+    >
+      <defs>
+        {/* Travelling highlight that rides along each curve */}
+        <linearGradient id="streak" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="var(--color-iris-mint)" stopOpacity="0" />
+          <stop offset="50%" stopColor="var(--color-iris-cyan)" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="var(--color-iris-lavender)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
 
-      {/* Main flow line */}
-      <motion.line
-        x1="62" y1="100" x2="140" y2="100"
-        stroke="#00e5ff" strokeWidth="1.5"
-        strokeDasharray="6 3"
-        initial={{ pathLength: 0 }}
-        animate={{ pathLength: 1 }}
-        transition={{ duration: 1.5, repeat: Infinity }}
-      />
-
-      {/* Split node */}
-      <motion.rect
-        x="142" y="82" width="36" height="36" rx="8"
-        fill="#00e5ff" fillOpacity="0.2"
-        stroke="#00e5ff" strokeWidth="1.5"
-        animate={{ opacity: [0.6, 1, 0.6] }}
-        transition={{ duration: 2, repeat: Infinity }}
-      />
-      <text x="160" y="105" textAnchor="middle" fill="#00e5ff" fontSize="11" className="font-semibold">Split</text>
-
-      {/* Output lines to recipients */}
-      {[60, 100, 140].map((y, i) => (
+      {LINES.map((i) => (
         <g key={i}>
-          <motion.line
-            x1="180" y1="100" x2="240" y2={y}
-            stroke="#00e5ff" strokeWidth="1"
-            strokeOpacity="0.5"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{ duration: 1, delay: 0.3 * i, repeat: Infinity }}
+          {/* Base curve — continuously morphs between three shapes */}
+          <motion.path
+            stroke="rgba(255,255,255,0.10)"
+            strokeWidth="1"
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={
+              reduceMotion
+                ? { pathLength: 1, opacity: 1, d: wavePath(i, 0) }
+                : {
+                    pathLength: 1,
+                    opacity: 1,
+                    d: [wavePath(i, 0), wavePath(i, 46), wavePath(i, -34), wavePath(i, 0)],
+                  }
+            }
+            transition={{
+              pathLength: { duration: 2.2, delay: i * 0.15, ease: 'easeOut' },
+              opacity: { duration: 1.2, delay: i * 0.15 },
+              d: reduceMotion
+                ? { duration: 0 }
+                : {
+                    duration: 16 + i * 2.5,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                    delay: i * 0.4,
+                  },
+            }}
           />
-          <motion.circle
-            cx="260" cy={y} r="14"
-            fill="#0a0a0a" stroke="rgba(255,255,255,0.15)" strokeWidth="1"
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 2, delay: 0.3 * i, repeat: Infinity }}
-          />
-          <text x="260" y={y + 3} textAnchor="middle" fill="#b3b3b3" fontSize="9" className="font-mono">
-            {['50%', '30%', '20%'][i]}
-          </text>
+
+          {/* Light streak drifting along the same curve */}
+          {!reduceMotion && (
+            <motion.path
+              stroke="url(#streak)"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              pathLength={1}
+              strokeDasharray="0.12 0.88"
+              initial={{ strokeDashoffset: 1, opacity: 0 }}
+              animate={{
+                strokeDashoffset: [1, 0],
+                opacity: [0, 1, 1, 0],
+                d: [wavePath(i, 0), wavePath(i, 46), wavePath(i, -34), wavePath(i, 0)],
+              }}
+              transition={{
+                strokeDashoffset: {
+                  duration: 7 + i * 1.5,
+                  repeat: Infinity,
+                  ease: 'linear',
+                  delay: i * 1.6,
+                },
+                opacity: {
+                  duration: 7 + i * 1.5,
+                  repeat: Infinity,
+                  times: [0, 0.15, 0.85, 1],
+                  delay: i * 1.6,
+                },
+                d: {
+                  duration: 16 + i * 2.5,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                  delay: i * 0.4,
+                },
+              }}
+            />
+          )}
         </g>
       ))}
+
+      <motion.ellipse
+        cx="1010"
+        cy="215"
+        rx="26"
+        ry="38"
+        stroke="rgba(255,255,255,0.14)"
+        strokeWidth="1"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={
+          reduceMotion
+            ? { opacity: 1, scale: 1 }
+            : { opacity: [0.5, 1, 0.5], scale: [1, 1.08, 1], rotate: [0, 8, 0] }
+        }
+        style={{ transformOrigin: '1010px 215px' }}
+        transition={
+          reduceMotion
+            ? { duration: 1, delay: 0.8 }
+            : { duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }
+        }
+      />
     </svg>
   );
 }
 
-// Use case card
-function UseCaseCard({ icon, title, description }: { icon: string; title: string; description: string }) {
+function FeatureCard({
+  icon: Icon,
+  title,
+  description,
+  delay,
+}: {
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  title: string;
+  description: string;
+  delay: number;
+}) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      className="glass-card"
+      viewport={{ once: true, margin: '-80px' }}
+      transition={{ duration: 0.5, delay, ease: [0.16, 1, 0.3, 1] }}
+      className="glass-card glass-card-hoverable p-7"
     >
-      <span style={{ fontSize: '32px', marginBottom: '16px', display: 'block' }}>{icon}</span>
-      <h3 className="font-semibold mb-2">{title}</h3>
-      <p className="text-secondary" style={{ fontSize: '14px', lineHeight: '1.6' }}>{description}</p>
+      <div className="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-white/6 border border-border">
+        <Icon size={19} className="text-iris-mint" />
+      </div>
+      <h3 className="mb-2 text-[17px] font-semibold tracking-tight text-white">{title}</h3>
+      <p className="text-sm leading-relaxed text-text-secondary">{description}</p>
     </motion.div>
   );
 }
 
-// Live feed widget
 function LiveFeed() {
   const { events } = useDistributionEvents();
   const recentEvents = events.slice(0, 5);
 
   return (
-    <div className="glass-card">
-      <div className="flex items-center gap-2 mb-4">
+    <div className="glass-card p-7">
+      <div className="mb-5 flex items-center gap-2.5">
         <span className="pulse-indicator" />
-        <h3 className="font-medium text-secondary" style={{ fontSize: '14px' }}>Live Distributions</h3>
+        <h3 className="text-[13px] font-medium uppercase tracking-wider text-text-secondary">
+          Live distributions
+        </h3>
       </div>
-      <div>
-        {recentEvents.length > 0 ? recentEvents.map((event, i) => (
-          <motion.div
-            key={event.id}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className="live-feed-item"
-          >
-            <div className="flex items-center gap-3">
-              <span className="font-mono text-accent" style={{ fontSize: '12px' }}>{event.splitId}</span>
-              <span className="text-secondary" style={{ fontSize: '12px' }}>
-                {formatTimestamp(event.timestamp)}
+      {recentEvents.length > 0 ? (
+        <div>
+          {recentEvents.map((event, i) => (
+            <motion.div
+              key={event.id}
+              initial={{ opacity: 0, x: 12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.08 }}
+              className="live-feed-item"
+            >
+              <div className="flex items-center gap-3">
+                <span className="font-mono text-xs text-iris-cyan">{event.splitId}</span>
+                <span className="text-xs text-text-muted">
+                  {formatTimestamp(event.timestamp)}
+                </span>
+              </div>
+              <span className="font-mono text-sm font-medium text-white">
+                ${event.totalAmount}
               </span>
-            </div>
-            <span className="font-mono font-medium text-primary">
-              ${event.totalAmount}
-            </span>
-          </motion.div>
-        )) : (
-          <div className="text-secondary text-center" style={{ padding: '24px 0', fontSize: '14px' }}>
-            No recent distributions. Be the first!
-          </div>
-        )}
-      </div>
+            </motion.div>
+          ))}
+        </div>
+      ) : (
+        <p className="py-8 text-center text-sm text-text-muted">
+          No recent distributions yet.
+        </p>
+      )}
     </div>
   );
 }
@@ -126,98 +212,181 @@ export default function LandingPage() {
   const { connect, isConnected } = useWallet();
 
   return (
-    <div>
-      {/* Hero */}
-      <section className="container py-24">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
-          <div className="animate-fade-in-up">
-            <h1 className="hero-title mb-4">
-              One payment.<br />
-              <span className="text-accent">Infinite splits.</span><br />
-              On-chain.
-            </h1>
-            <p className="hero-subtitle mb-8">
-              CirclePact lets you create programmable revenue splits that automatically
-              distribute USDC to multiple recipients on the Stellar network — atomically,
-              transparently, in real time.
+    <div className="overflow-hidden">
+      {/* ---------- HERO ---------- */}
+      <section className="relative isolate">
+        <div
+          className="iris-bloom"
+          style={{ width: 620, height: 620, top: -220, left: '18%' }}
+          aria-hidden="true"
+        />
+        <HeroLineArt />
+
+        <div className="container relative z-10 pt-20 pb-24 md:pt-28 md:pb-32">
+          <div className="grid items-center gap-12 lg:grid-cols-[1.15fr_0.85fr]">
+            <div>
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="display-xl relative"
+              >
+                {/* Ghost layer, offset behind the gradient type */}
+                <span
+                  className="text-outline absolute -left-1 -top-1 hidden select-none md:block"
+                  aria-hidden="true"
+                >
+                  Never save
+                  <br />
+                  alone
+                </span>
+                <span className="text-iris relative">
+                  Never save
+                  <br />
+                  alone
+                </span>
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.15 }}
+                className="hero-subtitle mt-7"
+              >
+                CirclePact turns informal savings circles into on-chain protocol.
+                Pool funds, automate payouts, and build portable reputation — with
+                smart contracts instead of trust.
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.25 }}
+                className="mt-9 flex flex-wrap gap-3"
+              >
+                {isConnected ? (
+                  <Link href="/circles/new">
+                    <Button size="lg">
+                      Create a circle
+                      <ArrowRight size={17} />
+                    </Button>
+                  </Link>
+                ) : (
+                  <Button size="lg" onClick={connect}>
+                    Get started
+                    <ArrowRight size={17} />
+                  </Button>
+                )}
+                <Link href="/circles">
+                  <Button variant="secondary" size="lg">
+                    Explore circles
+                  </Button>
+                </Link>
+              </motion.div>
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="relative"
+            >
+              <div className="iris-card grain overflow-hidden p-px">
+                <div className="rounded-[calc(var(--radius-xl)-1px)] bg-bg-card p-7">
+                  <LiveFeed />
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- STATS ---------- */}
+      <section className="container pb-24">
+        <div className="iris-card grain relative overflow-hidden">
+          <div className="bg-iris-soft grid gap-8 rounded-[calc(var(--radius-xl)-1px)] px-8 py-12 text-center sm:grid-cols-3">
+            {[
+              { value: '3', label: 'Soroban contracts live on testnet' },
+              { value: '100%', label: 'On-chain, non-custodial by design' },
+              { value: '0', label: 'Platform fees taken from a circle' },
+            ].map((stat) => (
+              <div key={stat.label}>
+                <div className="text-4xl font-bold tracking-tight text-black sm:text-5xl">
+                  {stat.value}
+                </div>
+                <p className="mx-auto mt-2 max-w-[190px] text-sm leading-snug text-black/60">
+                  {stat.label}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- FEATURES ---------- */}
+      <section className="container pb-28">
+        <div className="mb-12 max-w-2xl">
+          <span className="eyebrow mb-4">
+            <span className="pulse-indicator" />
+            Built for communities
+          </span>
+          <h2 className="display-lg text-iris">Savings circles, enforced by code</h2>
+        </div>
+
+        <div className="grid gap-5 md:grid-cols-3">
+          <FeatureCard
+            icon={Users}
+            title="Rotating savings"
+            description="Create trustless ROSCA groups with configurable contribution amounts, cycle length, and member caps."
+            delay={0}
+          />
+          <FeatureCard
+            icon={ShieldCheck}
+            title="On-chain reputation"
+            description="Build verifiable credit history from your contribution consistency — portable across every circle you join."
+            delay={0.08}
+          />
+          <FeatureCard
+            icon={Zap}
+            title="Automated payouts"
+            description="Funds sit in a contract vault, not an organiser's wallet. Payouts fire automatically when a member's turn arrives."
+            delay={0.16}
+          />
+        </div>
+      </section>
+
+      {/* ---------- CLOSING CTA ---------- */}
+      <section className="container pb-28">
+        <div className="relative overflow-hidden rounded-3xl border border-border bg-bg-card px-8 py-16 text-center md:py-20">
+          <div
+            className="iris-bloom iris-bloom-centered"
+            style={{ width: 460, height: 460, bottom: -280, left: '50%' }}
+            aria-hidden="true"
+          />
+          <div className="relative">
+            <h2 className="display-md mx-auto max-w-2xl text-white">
+              Start a circle with people you trust
+            </h2>
+            <p className="mx-auto mt-4 max-w-md text-[15px] leading-relaxed text-text-secondary">
+              Connect a Stellar wallet and deploy your first savings circle on testnet
+              in under a minute.
             </p>
-            <div className="flex gap-4">
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
               {isConnected ? (
-                <>
-                  <Link href="/circles/new" className="btn btn-primary">
-                    Create a Circle
-                  </Link>
-                  <Link href="/circles" className="btn btn-secondary">
-                    Explore
-                  </Link>
-                </>
+                <Link href="/circles/new">
+                  <Button size="lg">
+                    Create a circle
+                    <ArrowRight size={17} />
+                  </Button>
+                </Link>
               ) : (
-                <>
-                  <button onClick={connect} className="btn btn-primary">
-                    Connect Wallet
-                  </button>
-                  <Link href="/circles" className="btn btn-secondary">
-                    Explore
-                  </Link>
-                </>
+                <Button size="lg" onClick={connect}>
+                  Connect wallet
+                  <ArrowRight size={17} />
+                </Button>
               )}
             </div>
           </div>
-          <div className="flex justify-center" style={{ padding: '40px' }}>
-            <div className="glass-card" style={{ width: '100%', maxWidth: '400px', display: 'flex', justifyContent: 'center' }}>
-              <SplitDiagram />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Use cases */}
-      <section className="container py-16">
-        <h2 className="hero-title mb-8" style={{ fontSize: '2rem' }}>Built for</h2>
-        <div className="grid md:grid-cols-3 gap-6">
-          <UseCaseCard
-            icon="🤝"
-            title="Savings Circles"
-            description="Create trustless rotating savings groups (ROSCAs) with your community, powered by smart contracts."
-          />
-          <UseCaseCard
-            icon="🏆"
-            title="On-Chain Reputation"
-            description="Build verifiable credit history based on your contribution consistency and reliability."
-          />
-          <UseCaseCard
-            icon="⚡"
-            title="Instant Distributions"
-            description="Automatic and transparent payouts when it's a member's turn to receive the pot."
-          />
-        </div>
-      </section>
-
-      {/* Live feed */}
-      <section className="container py-16">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
-          <div>
-            <h2 className="hero-title mb-4" style={{ fontSize: '2rem' }}>Real-time transparency</h2>
-            <p className="hero-subtitle mb-8">
-              Every contribution and payout happens on-chain. Watch the protocol
-              activity live as communities build wealth together.
-            </p>
-            <div className="flex flex-col gap-4 text-secondary">
-              <div className="flex items-center gap-3">
-                <span className="pulse-indicator" style={{ animation: 'none' }} />
-                Smart contract enforcement
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="pulse-indicator" style={{ animation: 'none' }} />
-                USDC native integration
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="pulse-indicator" style={{ animation: 'none' }} />
-                No middlemen or platform fees
-              </div>
-            </div>
-          </div>
-          <LiveFeed />
         </div>
       </section>
     </div>

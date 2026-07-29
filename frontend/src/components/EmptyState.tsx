@@ -6,7 +6,8 @@ import { motion } from 'motion/react';
 type EmptyStateAction = React.ReactNode | { label: string; onClick?: () => void };
 
 interface EmptyStateProps {
-  icon?: string;
+  /** Emoji or a rendered icon node. */
+  icon?: React.ReactNode;
   title: string;
   description?: string;
   action?: EmptyStateAction;
@@ -19,45 +20,49 @@ function renderAction(action: EmptyStateAction) {
     return action;
   }
 
-  if (typeof action === 'object' && action !== null && 'label' in action && 'onClick' in action) {
+  if (typeof action === 'object' && action !== null && 'label' in action) {
     const { label, onClick } = action as { label: string; onClick?: () => void };
     return (
-      <button type="button" onClick={onClick} className="btn btn-primary">
+      <button
+        type="button"
+        onClick={onClick}
+        className="inline-flex h-11 items-center justify-center rounded-full bg-accent px-6 text-sm font-semibold text-[#04120a] transition-colors hover:bg-accent-hover"
+      >
         {label}
       </button>
     );
   }
 
-  return <div>{action as React.ReactNode}</div>;
+  return <>{action as React.ReactNode}</>;
 }
 
 export default function EmptyState({ title, description, action, icon }: EmptyStateProps) {
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 10 }}
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col items-center justify-center py-20 px-4 text-center border border-dashed border-border rounded-2xl bg-bg-card/50"
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      className="relative flex flex-col items-center justify-center overflow-hidden rounded-3xl border border-dashed border-border bg-bg-card/60 px-6 py-20 text-center"
     >
-      {/* Visual illustration element */}
-      <div className="relative w-24 h-24 mb-6 flex items-center justify-center">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-          className="absolute inset-0 border border-dashed border-border rounded-full"
-        />
-        <motion.div
-          animate={{ scale: [1, 1.1, 1] }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute inset-2 bg-accent/5 rounded-full blur-xl"
-        />
-        <div className="relative text-4xl">{icon || '🔍'}</div>
+      <div
+        className="iris-bloom iris-bloom-centered"
+        style={{ width: 320, height: 320, top: -180, left: '50%', opacity: 0.14 }}
+        aria-hidden="true"
+      />
+
+      <div className="relative mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-bg-surface text-2xl">
+        {icon ?? '○'}
       </div>
-      
-      <h3 className="text-xl font-semibold text-text-primary mb-2">{title}</h3>
-      <p className="text-text-secondary max-w-sm mb-8 leading-relaxed text-sm">
-        {description}
-      </p>
-      {renderAction(action)}
+
+      <h3 className="relative mb-2 text-xl font-semibold tracking-tight text-white">
+        {title}
+      </h3>
+      {description && (
+        <p className="relative mb-8 max-w-sm text-sm leading-relaxed text-text-secondary">
+          {description}
+        </p>
+      )}
+      <div className="relative">{renderAction(action)}</div>
     </motion.div>
   );
 }

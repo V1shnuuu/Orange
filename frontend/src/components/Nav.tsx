@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { MessageCircle, Menu, X } from 'lucide-react';
 import WalletButton from './WalletButton';
 import NetworkBadge from './NetworkBadge';
 import FeedbackModal from './FeedbackModal';
@@ -19,101 +21,110 @@ export default function Nav() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
 
+  const isActive = (href: string) =>
+    pathname === href || pathname?.startsWith(href + '/');
+
   return (
     <header className="nav-header">
       <div className="nav-container">
-        {/* Logo */}
-        <Link href="/" className="nav-logo">
-          <div className="nav-logo-icon">
+        <Link href="/" className="flex items-center gap-2.5 group shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <circle cx="8" cy="8" r="6" stroke="#00e5ff" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="4 2" />
-              <circle cx="8" cy="8" r="3" fill="#00e5ff" />
+              <circle cx="8" cy="8" r="6" stroke="#000" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="4 2" />
+              <circle cx="8" cy="8" r="3" fill="#000" />
             </svg>
           </div>
-          <span className="nav-logo-text">
-            Circle<span className="text-accent">Pact</span>
+          <span className="text-[17px] font-semibold tracking-tight text-white">
+            circlepact
           </span>
         </Link>
 
-        {/* Desktop nav */}
-        <nav className="nav-links">
+        <nav className="hidden md:flex items-center gap-1">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className={`nav-link ${
-                pathname === link.href || pathname?.startsWith(link.href + '/')
-                  ? 'active'
-                  : ''
+              className={`relative px-3.5 py-2 text-sm font-medium rounded-full transition-colors ${
+                isActive(link.href)
+                  ? 'text-white'
+                  : 'text-text-secondary hover:text-white'
               }`}
             >
-              {link.label}
+              {isActive(link.href) && (
+                <motion.span
+                  layoutId="nav-active-pill"
+                  className="absolute inset-0 rounded-full bg-white/10"
+                  transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                />
+              )}
+              <span className="relative">{link.label}</span>
             </Link>
           ))}
         </nav>
 
-        {/* Wallet + Mobile toggle */}
-        <div className="nav-actions">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => setFeedbackOpen(true)}
-            className="btn btn-secondary"
-            style={{ padding: '6px 12px', fontSize: '13px', display: 'flex', gap: '6px' }}
+            className="hidden lg:inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full text-[13px] font-medium text-text-secondary hover:text-white hover:bg-white/8 transition-colors"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-            </svg>
-            <span className="hidden md:inline">Feedback</span>
+            <MessageCircle size={14} />
+            Feedback
           </button>
-          <div style={{ display: 'none' }} className="md:block"><NetworkBadge /></div>
+          <div className="hidden md:block">
+            <NetworkBadge />
+          </div>
           <WalletButton />
-          
+
           <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden"
-            style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
+            onClick={() => setMobileMenuOpen((v) => !v)}
+            className="md:hidden w-9 h-9 flex items-center justify-center rounded-full text-text-secondary hover:text-white hover:bg-white/8 transition-colors"
             aria-label="Toggle menu"
+            aria-expanded={mobileMenuOpen}
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              {mobileMenuOpen ? (
-                <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round"/>
-              ) : (
-                <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round"/>
-              )}
-            </svg>
+            {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
       </div>
 
-      {/* Mobile menu */}
-      {mobileMenuOpen && (
-        <div style={{ padding: '16px', background: 'var(--bg-secondary)', borderTop: '1px solid var(--border)' }} className="md:hidden animate-fade-in-up">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`nav-link ${
-                  pathname === link.href ? 'active' : ''
-                }`}
-                style={{ padding: '8px 0', fontSize: '15px' }}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="md:hidden max-w-[1200px] mx-auto mt-2 rounded-3xl border border-border bg-bg-surface/90 backdrop-blur-xl overflow-hidden"
+          >
+            <div className="flex flex-col gap-1 p-3">
+              {NAV_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`px-4 py-3 rounded-2xl text-sm font-medium transition-colors ${
+                    isActive(link.href)
+                      ? 'text-white bg-white/10'
+                      : 'text-text-secondary hover:text-white hover:bg-white/6'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <button
+                onClick={() => {
+                  setFeedbackOpen(true);
+                  setMobileMenuOpen(false);
+                }}
+                className="flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-medium text-text-secondary hover:text-white hover:bg-white/6 transition-colors text-left"
               >
-                {link.label}
-              </Link>
-            ))}
-            <button
-              onClick={() => {
-                setFeedbackOpen(true);
-                setMobileMenuOpen(false);
-              }}
-              style={{ padding: '8px 0', fontSize: '15px', color: 'var(--text-secondary)', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer' }}
-            >
-              Feedback
-            </button>
-          </div>
-        </div>
-      )}
-      
+                <MessageCircle size={16} />
+                Feedback
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <FeedbackModal isOpen={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
     </header>
   );

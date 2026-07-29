@@ -61,8 +61,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       setPublicKey(address);
       localStorage.setItem('splitstream_wallet', address);
     } catch (err: unknown) {
-      console.error("Wallet connection error:", err);
-      setError(classifyError(err));
+      const classified = classifyError(err);
+      if (classified.type !== 'wallet_not_installed') {
+        console.error("Wallet connection error:", err);
+      }
+      setError(classified);
     } finally {
       setIsConnecting(false);
     }

@@ -40,9 +40,32 @@ export function decodeContractError(errorCode: number, isVault: boolean = false)
   return messages[errorCode] || `Unknown contract error (code: ${errorCode})`;
 }
 
+function extractMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  if (error && typeof error === 'object') {
+    const obj = error as Record<string, unknown>;
+    if (typeof obj.message === 'string') return obj.message;
+    if (typeof obj.error === 'string') return obj.error;
+    if (Object.keys(obj).length === 0) return '';
+  }
+  return String(error ?? '');
+}
+
 export function classifyError(error: unknown): AppError {
-  const message = error instanceof Error ? error.message : String(error);
+  const message = extractMessage(error);
   const lower = message.toLowerCase();
+
+  // No message extractable (e.g. an empty rejection) — most commonly means
+  // the wallet extension isn't installed, since fetchAddress() rejects with
+  // a bare object rather than an Error when there's nothing to connect to.
+  if (!message) {
+    return {
+      type: 'wallet_not_installed',
+      message: 'No Stellar wallet detected. Please install Freighter, xBull, or Albedo to continue.',
+      retryable: false,
+    };
+  }
 
   // Wallet not installed
   if (lower.includes('freighter') && lower.includes('not') && lower.includes('install')) {

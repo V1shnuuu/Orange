@@ -1,8 +1,10 @@
 'use client';
 
+import { Wallet } from 'lucide-react';
 import { useWallet } from './WalletProvider';
 import { truncateAddress } from '@/lib/stellar';
 import ErrorBanner from './ErrorBanner';
+import Button from './Button';
 
 export default function WalletButton() {
   const { publicKey, isConnected, isConnecting, connect, disconnect, error, clearError } = useWallet();
@@ -10,40 +12,24 @@ export default function WalletButton() {
   if (isConnected && publicKey) {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-xs font-mono text-text-secondary bg-bg-surface px-3 py-1.5 rounded-lg border border-border hidden sm:inline-block">
+        <span className="hidden sm:inline-block text-xs font-mono text-text-secondary bg-bg-surface px-3 py-1.5 rounded-lg border border-border">
           {truncateAddress(publicKey, 6)}
         </span>
-        <button
-          onClick={disconnect}
-          className="btn-secondary text-sm !py-1.5 !px-3"
-        >
+        <Button variant="secondary" size="sm" onClick={disconnect}>
           Disconnect
-        </button>
+        </Button>
       </div>
     );
   }
 
   return (
     <div className="relative flex flex-col items-end">
-      <button
-        onClick={connect}
-        disabled={isConnecting}
-        className="btn-primary text-sm flex items-center gap-2"
-      >
-        {isConnecting ? (
-          <>
-            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
-            Connecting...
-          </>
-        ) : (
-          'Connect Wallet'
-        )}
-      </button>
+      <Button variant="primary" size="sm" onClick={connect} isLoading={isConnecting}>
+        {!isConnecting && <Wallet size={14} />}
+        {isConnecting ? 'Connecting…' : 'Connect Wallet'}
+      </Button>
       {error && error.type !== 'wallet_not_installed' && (
-        <div className="absolute top-full mt-2 right-0 w-64 z-50 animate-slide-up">
+        <div className="absolute top-full mt-2 right-0 w-64 z-50 animate-fade-in-up">
           <ErrorBanner error={error} onDismiss={clearError} />
         </div>
       )}

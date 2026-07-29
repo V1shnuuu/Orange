@@ -2,20 +2,21 @@
 
 import Link from 'next/link';
 import EmptyState from '@/components/EmptyState';
+import Button from '@/components/Button';
 
 export default function NotFound() {
   return (
-    <div className="max-w-6xl mx-auto px-4 py-20 flex flex-col items-center justify-center min-h-[60vh]">
+    <div className="container flex min-h-[70vh] flex-col justify-center py-20">
       <EmptyState
-        icon="🌌"
-        title="Page Not Found"
-        description="The page you are looking for doesn't exist or has been moved."
+        icon="◌"
+        title="Page not found"
+        description="The page you're looking for doesn't exist or has been moved."
+        action={
+          <Link href="/">
+            <Button>Return home</Button>
+          </Link>
+        }
       />
-      <div className="mt-8">
-        <Link href="/" className="btn-primary">
-          Return Home
-        </Link>
-      </div>
     </div>
   );
 }

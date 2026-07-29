@@ -20,8 +20,8 @@ export default function Card({
   hoverable = false,
   ...props
 }: CardProps) {
-  const baseClasses = `glass-card ${
-    hoverable ? 'hover:border-accent/30 transition-all group' : ''
+  const baseClasses = `glass-card p-6 ${
+    hoverable ? 'glass-card-hoverable cursor-pointer' : ''
   } ${className}`;
 
   if (animate) {

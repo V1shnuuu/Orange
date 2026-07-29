@@ -2,10 +2,14 @@
 
 import Link from 'next/link';
 import { motion } from 'motion/react';
+import { Plus } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useWallet } from '@/components/WalletProvider';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
+import EmptyState from '@/components/EmptyState';
+import PageHeader from '@/components/PageHeader';
+import Button from '@/components/Button';
 import { truncateAddress } from '@/lib/stellar';
-import { useState, useEffect } from 'react';
 
 interface SplitCardData {
   id: string;
@@ -39,80 +43,79 @@ export default function SplitsDashboard() {
 
   if (!isConnected) {
     return (
-      <div className="container py-24 text-center">
-        <h1 className="hero-title mb-4">My Splits</h1>
-        <p className="text-secondary mb-6">Connect your wallet to view and manage your splits.</p>
-        <button onClick={connect} className="btn btn-primary">
-          Connect Wallet
-        </button>
+      <div className="container py-24">
+        <EmptyState
+          icon="◆"
+          title="Connect your wallet"
+          description="Connect a Stellar wallet to view and manage your payment splits."
+          action={<Button onClick={connect}>Connect wallet</Button>}
+        />
       </div>
     );
   }
 
   return (
-    <div className="container py-16">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="hero-title mb-2">My Splits</h1>
-          <p className="text-secondary mt-1" style={{ fontSize: '14px' }}>
-            Wallet: <span className="font-mono text-accent">{truncateAddress(publicKey || '', 6)}</span>
-          </p>
-        </div>
-        <Link href="/splits/new" className="btn btn-primary">
-          + Create New Split
-        </Link>
-      </div>
+    <div className="container py-14">
+      <PageHeader
+        eyebrow="Splits"
+        title="My splits"
+        description={
+          publicKey ? `Wallet ${truncateAddress(publicKey, 6)}` : undefined
+        }
+        actions={
+          <Link href="/splits/new">
+            <Button>
+              <Plus size={16} />
+              Create split
+            </Button>
+          </Link>
+        }
+      />
 
       {isLoading ? (
         <LoadingSkeleton count={3} />
       ) : splits.length === 0 ? (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center py-16 glass-card"
-        >
-          <p className="text-4xl mb-4">📊</p>
-          <h2 className="font-semibold mb-2" style={{ fontSize: '18px' }}>No splits yet</h2>
-          <p className="text-secondary mb-6" style={{ fontSize: '14px' }}>
-            Create your first split to start distributing payments automatically.
-          </p>
-          <Link href="/splits/new" className="btn btn-primary">
-            Create Your First Split
-          </Link>
-        </motion.div>
+        <EmptyState
+          icon="◆"
+          title="No splits yet"
+          description="Create your first split to start distributing payments automatically."
+          action={
+            <Link href="/splits/new">
+              <Button>
+                <Plus size={16} />
+                Create your first split
+              </Button>
+            </Link>
+          }
+        />
       ) : (
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           {splits.map((split, i) => (
             <motion.div
               key={split.id}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
+              transition={{ delay: i * 0.07, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
             >
               <Link
                 href={`/splits/${split.id}`}
-                className="block glass-card group transition-all"
-                style={{ textDecoration: 'none' }}
+                className="glass-card glass-card-hoverable group block p-6 no-underline"
               >
-                <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <h3 className="font-semibold font-mono transition-colors group-hover:text-accent mb-1" style={{ fontSize: '16px' }}>
+                    <h3 className="font-mono text-base font-semibold text-white transition-colors group-hover:text-iris-cyan">
                       {split.id}
                     </h3>
-                    <p className="text-secondary mt-1" style={{ fontSize: '14px' }}>
+                    <p className="mt-1.5 text-sm text-text-secondary">
                       {split.recipientCount} recipients
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-mono font-semibold" style={{ fontSize: '18px' }}>
+                    <p className="font-mono text-lg font-semibold text-white">
                       ${split.totalDistributed}
                     </p>
-                    <p className="text-secondary" style={{ fontSize: '12px' }}>total distributed</p>
+                    <p className="mt-0.5 text-xs text-text-muted">total distributed</p>
                   </div>
-                </div>
-                <div className="flex gap-2" style={{ marginTop: '16px' }}>
-                  <span className="btn btn-primary" style={{ padding: '6px 12px', fontSize: '12px' }}>Distribute</span>
-                  <span className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '12px' }}>Edit</span>
                 </div>
               </Link>
             </motion.div>

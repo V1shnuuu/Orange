@@ -3,9 +3,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Search } from 'lucide-react';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
 import EmptyState from '@/components/EmptyState';
-import Card from '@/components/Card';
+import PageHeader from '@/components/PageHeader';
 import Button from '@/components/Button';
 import { useDebounce } from '@/hooks/useDebounce';
 import { truncateAddress } from '@/lib/stellar';
@@ -55,31 +56,38 @@ export default function ExplorePage() {
   }, [splits, debouncedSearch, sortKey]);
 
   return (
-    <div className="container py-16">
-      <div className="mb-8">
-        <h1 className="hero-title mb-2">Explore Splits</h1>
-        <p className="text-secondary">
-          Browse all registered payment splits on the Stellar network.
-        </p>
-      </div>
+    <div className="container py-14">
+      <PageHeader
+        eyebrow="Explore"
+        title="All payment splits"
+        description="Browse every registered payment split on the Stellar network."
+      />
 
-      {/* Search + Sort toolbar */}
-      <div className="flex flex-col md:flex-row gap-4 mb-8">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by split ID..."
-          className="input-field flex-1 max-w-sm"
-        />
+      {/* Search + sort toolbar */}
+      <div className="mb-8 flex flex-col gap-3 md:flex-row">
+        <div className="relative max-w-sm flex-1">
+          <Search
+            size={15}
+            className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-muted"
+          />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by split ID…"
+            aria-label="Search splits"
+            className="input-field pl-10"
+          />
+        </div>
         <select
           value={sortKey}
           onChange={(e) => setSortKey(e.target.value as SortKey)}
-          className="input-field max-w-xs"
+          aria-label="Sort splits"
+          className="input-field max-w-[220px]"
         >
-          <option value="distributed">Sort: Most Distributed</option>
-          <option value="recipients">Sort: Most Recipients</option>
-          <option value="id">Sort: Name A–Z</option>
+          <option value="distributed">Most distributed</option>
+          <option value="recipients">Most recipients</option>
+          <option value="id">Name A–Z</option>
         </select>
       </div>
 
@@ -87,45 +95,49 @@ export default function ExplorePage() {
         <LoadingSkeleton count={4} />
       ) : displayed.length === 0 ? (
         <EmptyState
-          icon="🔍"
+          icon="◎"
           title={search ? `No splits matching "${search}"` : 'No splits yet'}
-          description={search ? 'Try a different search term.' : 'Be the first to create a payment split on Stellar.'}
-          action={!search ? <Button onClick={() => router.push('/splits/new')}>Create a Split</Button> : undefined}
+          description={
+            search
+              ? 'Try a different search term.'
+              : 'Be the first to create a payment split on Stellar.'
+          }
+          action={
+            !search ? (
+              <Button onClick={() => router.push('/splits/new')}>Create a split</Button>
+            ) : undefined
+          }
         />
       ) : (
-        <div className="grid md:grid-cols-2 md:grid-cols-3 gap-6">
-          {displayed.map((split, i) => (
-            <Card
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {displayed.map((split) => (
+            <Link
               key={split.id}
-              animate
-              delay={i * 0.05}
-              hoverable
-              className="!p-0"
+              href={`/splits/${split.id}`}
+              className="glass-card glass-card-hoverable group block p-6 no-underline"
             >
-              <Link
-                href={`/splits/${split.id}`}
-                className="block p-5"
-                style={{ textDecoration: 'none' }}
-              >
-                <h3 className="font-mono font-semibold transition-colors mb-4 group-hover:text-accent">
-                  {split.id}
-                </h3>
-                <div className="flex-col gap-2">
-                  <div className="flex justify-between" style={{ fontSize: '12px' }}>
-                    <span className="text-secondary">Owner</span>
-                    <span className="font-mono text-secondary">{truncateAddress(split.owner, 4)}</span>
-                  </div>
-                  <div className="flex justify-between" style={{ fontSize: '12px' }}>
-                    <span className="text-secondary">Recipients</span>
-                    <span className="text-secondary">{split.recipientCount}</span>
-                  </div>
-                  <div className="flex justify-between" style={{ fontSize: '12px' }}>
-                    <span className="text-secondary">Distributed</span>
-                    <span className="font-mono text-accent font-medium">${split.totalDistributed}</span>
-                  </div>
+              <h3 className="mb-5 font-mono text-[15px] font-semibold text-white transition-colors group-hover:text-iris-cyan">
+                {split.id}
+              </h3>
+              <dl className="space-y-2.5 text-xs">
+                <div className="flex justify-between">
+                  <dt className="text-text-muted">Owner</dt>
+                  <dd className="font-mono text-text-secondary">
+                    {truncateAddress(split.owner, 4)}
+                  </dd>
                 </div>
-              </Link>
-            </Card>
+                <div className="flex justify-between">
+                  <dt className="text-text-muted">Recipients</dt>
+                  <dd className="text-text-secondary">{split.recipientCount}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-text-muted">Distributed</dt>
+                  <dd className="font-mono font-medium text-iris-mint">
+                    ${split.totalDistributed}
+                  </dd>
+                </div>
+              </dl>
+            </Link>
           ))}
         </div>
       )}
