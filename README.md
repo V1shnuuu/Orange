@@ -193,11 +193,18 @@ to the feedback that motivated it. The intended process:
 
 ### Known gaps this phase must also close
 
-- **Contract integration is simulated.** `useCircleContracts` and
-  `useSorobanContract` use `setTimeout` and in-memory state rather than real
-  Soroban RPC calls, so circle actions do not yet write to the deployed
-  contracts. This must be wired to the live testnet contracts before circle
-  activity can count as real on-chain usage.
+- **Circle creation is real; membership/contribution/payout are not — yet.**
+  `useCircleContracts.createCircle()` builds, simulates, signs (via the
+  connected wallet), submits, and confirms a real `circle-factory.create_circle`
+  transaction on Stellar testnet (`lib/soroban.ts`). Joining a circle and
+  contributing funds are still simulated in-memory, because the deployed
+  `circle-core` contract is a single-instance contract — it supports exactly
+  one circle's worth of state and was never initialized — while
+  `circle-factory` never deploys a fresh `circle-core` per circle. Multiple
+  concurrent circles with real membership/payouts need either a per-circle
+  deployment mechanism or a multi-tenant rewrite of `circle-core`, plus a real
+  test token for `contribute()` to transfer. Until then, the UI labels which
+  parts of each circle are on-chain vs. simulated.
 - **In-app feedback is not persisted.** `FeedbackModal` only logs to the
   console; it needs an API route or webhook before it can collect anything.
 

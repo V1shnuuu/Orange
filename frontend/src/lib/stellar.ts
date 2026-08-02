@@ -14,6 +14,34 @@ export function getServer(): StellarSdk.rpc.Server {
   return _server;
 }
 
+// Soroban `Symbol` values only allow [A-Za-z0-9_] and are capped at 32 chars.
+// Converts arbitrary display text (e.g. a free-text circle name) into a
+// valid Symbol by stripping disallowed characters and truncating.
+export const SOROBAN_SYMBOL_MAX_LEN = 32;
+
+export function toSorobanSymbol(input: string, maxLen: number = SOROBAN_SYMBOL_MAX_LEN): string {
+  const cleaned = input
+    .trim()
+    .replace(/\s+/g, '_')
+    .replace(/[^A-Za-z0-9_]/g, '');
+  const truncated = cleaned.slice(0, maxLen);
+  // A Symbol can't be empty — fall back to a generated one if nothing survives.
+  return truncated.length > 0 ? truncated : `c_${Date.now().toString(36)}`.slice(0, maxLen);
+}
+
+// Generates a short, (practically) unique Soroban Symbol suitable for a
+// circle_id — timestamp + random suffix, base36, always starts with a letter.
+export function generateCircleId(): string {
+  const id = `c${Date.now().toString(36)}${Math.floor(Math.random() * 1e4).toString(36)}`;
+  return id.slice(0, SOROBAN_SYMBOL_MAX_LEN);
+}
+
+// Friendbot funds a testnet account with test XLM. No mainnet equivalent —
+// only call this when NETWORK is testnet.
+export function friendbotFundUrl(address: string): string {
+  return `https://friendbot.stellar.org?addr=${encodeURIComponent(address)}`;
+}
+
 // Truncate Stellar address for display
 export function truncateAddress(address: string, chars: number = 4): string {
   if (!address) return '';

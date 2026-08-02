@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { motion } from 'motion/react';
+import { CircleCheck } from 'lucide-react';
 import { formatAmount } from '@/lib/stellar';
 import Button from './Button';
 
@@ -10,6 +11,7 @@ interface CircleCardProps {
   maxMembers: number;
   currentMembers: number;
   cycleDurationDays: number;
+  isOnChain?: boolean;
 }
 
 export default function CircleCard({
@@ -19,6 +21,7 @@ export default function CircleCard({
   maxMembers,
   currentMembers,
   cycleDurationDays,
+  isOnChain,
 }: CircleCardProps) {
   const isFull = currentMembers >= maxMembers;
   const progressPercent = (currentMembers / maxMembers) * 100;
@@ -30,7 +33,7 @@ export default function CircleCard({
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       className="glass-card glass-card-hoverable flex flex-col p-6"
     >
-      <div className="mb-6 flex items-start justify-between gap-3">
+      <div className="mb-4 flex items-start justify-between gap-3">
         <h3 className="text-[17px] font-semibold leading-snug tracking-tight text-white">
           {name}
         </h3>
@@ -38,6 +41,13 @@ export default function CircleCard({
           {cycleDurationDays}D
         </span>
       </div>
+
+      {isOnChain && (
+        <span className="mb-4 inline-flex w-fit items-center gap-1.5 rounded-full border border-accent/25 bg-accent/10 px-2.5 py-1 text-[11px] font-medium text-accent">
+          <CircleCheck size={12} />
+          On-chain
+        </span>
+      )}
 
       <dl className="mb-6 space-y-2.5">
         <div className="flex justify-between text-sm">

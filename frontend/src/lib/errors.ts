@@ -1,3 +1,6 @@
+import { AccountNotFundedError } from './soroban';
+import { friendbotFundUrl } from './stellar';
+
 // Maps SplitError enum codes to human-readable messages
 const SPLIT_ERROR_MESSAGES: Record<number, string> = {
   1: 'Split configuration not found. It may have been deactivated.',
@@ -26,13 +29,16 @@ export type ErrorType =
   | 'invalid_shares'
   | 'split_exists'
   | 'contract_error'
-  | 'network_timeout';
+  | 'network_timeout'
+  | 'account_not_funded';
 
 export interface AppError {
   type: ErrorType;
   message: string;
   code?: number;
   retryable: boolean;
+  /** Friendbot funding link, set only for account_not_funded errors. */
+  friendbotUrl?: string;
 }
 
 export function decodeContractError(errorCode: number, isVault: boolean = false): string {
@@ -53,6 +59,16 @@ function extractMessage(error: unknown): string {
 }
 
 export function classifyError(error: unknown): AppError {
+  if (error instanceof AccountNotFundedError) {
+    return {
+      type: 'account_not_funded',
+      message:
+        'This wallet has no account on Stellar testnet yet. Fund it with free test XLM to continue.',
+      retryable: true,
+      friendbotUrl: friendbotFundUrl(error.address),
+    };
+  }
+
   const message = extractMessage(error);
   const lower = message.toLowerCase();
 

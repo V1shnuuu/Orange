@@ -6,6 +6,10 @@ import {
   formatAmount,
   formatUSDC,
   toStroops,
+  toSorobanSymbol,
+  generateCircleId,
+  friendbotFundUrl,
+  SOROBAN_SYMBOL_MAX_LEN,
 } from '@/lib/stellar';
 
 // A valid 56-char G-address using only A-Z 2-7
@@ -128,5 +132,70 @@ describe('toStroops', () => {
 
   it('converts zero', () => {
     expect(toStroops(0)).toBe(BigInt(0));
+  });
+});
+
+describe('toSorobanSymbol', () => {
+  it('leaves an already-valid symbol unchanged', () => {
+    expect(toSorobanSymbol('Alpha_Savings_123')).toBe('Alpha_Savings_123');
+  });
+
+  it('replaces whitespace with underscores', () => {
+    expect(toSorobanSymbol('Alpha Savings Group')).toBe('Alpha_Savings_Group');
+  });
+
+  it('strips characters outside [A-Za-z0-9_]', () => {
+    expect(toSorobanSymbol("Alpha's Savings! #1")).toBe('Alphas_Savings_1');
+  });
+
+  it('truncates to the max Symbol length', () => {
+    const long = 'A'.repeat(50);
+    const result = toSorobanSymbol(long);
+    expect(result.length).toBe(SOROBAN_SYMBOL_MAX_LEN);
+    expect(result).toBe('A'.repeat(SOROBAN_SYMBOL_MAX_LEN));
+  });
+
+  it('respects a custom maxLen', () => {
+    expect(toSorobanSymbol('Alpha Savings', 5)).toBe('Alpha');
+  });
+
+  it('falls back to a generated symbol when nothing survives sanitization', () => {
+    const result = toSorobanSymbol('!!! @@@ ###');
+    expect(result.length).toBeGreaterThan(0);
+    expect(result).toMatch(/^[A-Za-z0-9_]+$/);
+  });
+
+  it('only ever produces valid Symbol characters', () => {
+    const result = toSorobanSymbol('日本語 emoji 🎉 test-name!');
+    expect(result).toMatch(/^[A-Za-z0-9_]*$/);
+  });
+});
+
+describe('generateCircleId', () => {
+  it('produces a valid Soroban Symbol', () => {
+    const id = generateCircleId();
+    expect(id.length).toBeGreaterThan(0);
+    expect(id.length).toBeLessThanOrEqual(SOROBAN_SYMBOL_MAX_LEN);
+    expect(id).toMatch(/^[A-Za-z0-9_]+$/);
+  });
+
+  it('starts with a letter', () => {
+    expect(generateCircleId()).toMatch(/^[A-Za-z]/);
+  });
+
+  it('generates distinct ids across calls', () => {
+    const ids = new Set(Array.from({ length: 20 }, () => generateCircleId()));
+    expect(ids.size).toBeGreaterThan(1);
+  });
+});
+
+describe('friendbotFundUrl', () => {
+  it('builds a friendbot URL with the address as a query param', () => {
+    const addr = 'GCHE645J3234KFRIEOH3Z76JU3N27SAKTCKH6QFTZMK2T5MQZ5CBJHV4';
+    expect(friendbotFundUrl(addr)).toBe(`https://friendbot.stellar.org?addr=${addr}`);
+  });
+
+  it('URL-encodes special characters in the address', () => {
+    expect(friendbotFundUrl('a b')).toBe('https://friendbot.stellar.org?addr=a%20b');
   });
 });

@@ -38,6 +38,7 @@ export default function CirclesPage() {
               maxMembers={circle.maxMembers}
               currentMembers={circle.currentMembers}
               cycleDurationDays={circle.cycleDurationDays}
+              isOnChain={circle.isOnChain}
             />
           ))}
         </div>

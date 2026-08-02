@@ -113,6 +113,26 @@ export default function ErrorBanner({ error, onDismiss, onRetry }: ErrorBannerPr
     );
   }
 
+  // Account not funded on testnet — link to friendbot
+  if (error.type === 'account_not_funded') {
+    return (
+      <div className="rounded-2xl border border-warning/25 bg-warning/10 p-3.5">
+        <p className="text-sm font-medium text-warning">{error.message}</p>
+        {error.friendbotUrl && (
+          <a
+            href={error.friendbotUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-warning underline-offset-2 hover:underline"
+          >
+            Fund with Friendbot
+            <ExternalLink size={12} />
+          </a>
+        )}
+      </div>
+    );
+  }
+
   // Insufficient balance
   if (error.type === 'insufficient_balance') {
     return (

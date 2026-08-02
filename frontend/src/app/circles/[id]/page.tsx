@@ -3,10 +3,10 @@
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useMemo } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, CircleCheck, Info, ExternalLink } from 'lucide-react';
 import { useCircleContracts } from '@/hooks/useCircleContracts';
 import { useWallet } from '@/components/WalletProvider';
-import { formatAmount } from '@/lib/stellar';
+import { formatAmount, stellarExpertTxUrl } from '@/lib/stellar';
 import ProgressRing from '@/components/ProgressRing';
 import Timeline from '@/components/Timeline';
 import MemberCard from '@/components/MemberCard';
@@ -124,6 +124,24 @@ export default function CircleDashboardPage() {
         <div className="flex flex-col gap-6">
           <div className="glass-card p-7 text-center">
             <h1 className="heading-page mb-1 text-white">{circle.name}</h1>
+
+            {circle.isOnChain ? (
+              <a
+                href={circle.createCircleTxHash ? stellarExpertTxUrl(circle.createCircleTxHash) : undefined}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-accent/25 bg-accent/10 px-2.5 py-1 text-[11px] font-medium text-accent transition-colors hover:border-accent/40"
+              >
+                <CircleCheck size={12} />
+                Created on-chain
+                {circle.createCircleTxHash && <ExternalLink size={10} />}
+              </a>
+            ) : (
+              <span className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-border bg-white/5 px-2.5 py-1 text-[11px] font-medium text-text-muted">
+                Demo circle
+              </span>
+            )}
+
             <p className="mb-7 text-sm text-text-secondary">
               Cycle 1 of {circle.maxMembers}
             </p>
@@ -169,6 +187,13 @@ export default function CircleDashboardPage() {
                 Pay contribution
               </Button>
             )}
+
+            <p className="mt-4 flex items-start gap-1.5 text-left text-xs leading-relaxed text-text-muted">
+              <Info size={13} className="mt-0.5 shrink-0" />
+              Joining and contributing are simulated in this build — the on-chain
+              circle-core contract doesn&apos;t support multiple circles yet, so
+              these actions update local state only.
+            </p>
           </div>
 
           <div className="glass-card p-7">
