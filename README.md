@@ -22,6 +22,12 @@ Contracts deployed on Stellar testnet:
 - circle-core: [CDKN4ZKKEH2CVHOJ36QKSTYFMISMHUJSDAWK2SCISDAD3W2PQPNDAR3W](https://stellar.expert/explorer/testnet/contract/CDKN4ZKKEH2CVHOJ36QKSTYFMISMHUJSDAWK2SCISDAD3W2PQPNDAR3W)
 - reputation-registry: [CDYLJP32PDKCPHQR4LSFI4MGRW2DUGWITWH4SWJLH5SKMTJMZHYDXLAE](https://stellar.expert/explorer/testnet/contract/CDYLJP32PDKCPHQR4LSFI4MGRW2DUGWITWH4SWJLH5SKMTJMZHYDXLAE)
 
+The deployed `circle-core` and `reputation-registry` builds are behind this
+repository and need redeploying before the addresses above match the source:
+`circle-core.initialize` now takes the circle's fixed contribution amount and
+`contribute` rejects any other figure, and `reputation-registry` gained a
+`record_circle_joined` entry point. `circle-factory` is unchanged.
+
 Midnight integration: not yet deployed. The Compact contract source in this
 repo (`contracts/CirclePact.compact`) compiles against the Midnight Compact
 standard library but has not been deployed to a live Midnight network. This
@@ -129,13 +135,18 @@ npm run start
 ```
 
 ## Verification
-- Frontend tests: verified with `npm test` (53 tests passing)
-- Type checking: verified with `npm run type-check`
-- Production build: verified with `npm run build`
+Every check below is gated in CI ([.github/workflows/ci.yml](.github/workflows/ci.yml))
+and was last run locally on 2026-08-18:
+
+- Contract tests: `cargo test --all` in `contracts/` — 40 tests across the five crates
+- Contract WASM build: `cargo build --target wasm32-unknown-unknown --release`
+- Frontend tests: `npm test` in `frontend/` — 84 tests
+- Type checking: `npm run type-check`
+- Production build: `npm run build`
 
 ## Level 5 Submission Checklist
 - [x] Public GitHub repository
-- [x] 20+ meaningful commits (84 at time of writing)
+- [x] 20+ meaningful commits (96 at time of writing)
 - [x] Live deployed application
 - [x] Improved UX/UI and product stability — see [Product Improvements Shipped](#product-improvements-shipped)
 - [x] Optimized onboarding experience (wallet error handling, install prompts, transaction feedback)
