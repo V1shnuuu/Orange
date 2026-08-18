@@ -228,3 +228,6 @@ impl CircleCoreContract {
         env.storage().persistent().get(&DataKey::Member(member))
     }
 }
+
+#[cfg(test)]
+mod test;
