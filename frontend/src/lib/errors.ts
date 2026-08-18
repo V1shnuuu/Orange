@@ -22,6 +22,36 @@ const VAULT_ERROR_MESSAGES: Record<number, string> = {
   5: 'Distribution failed — please try again.',
 };
 
+// Maps CircleError enum codes to human-readable messages
+const CIRCLE_ERROR_MESSAGES: Record<number, string> = {
+  1: 'This circle has not started yet — it opens once every seat is filled.',
+  2: 'This circle has already been set up.',
+  3: 'This circle is full — every seat has been taken.',
+  4: 'You have already joined this circle.',
+  5: 'Only members of this circle can contribute.',
+  6: "Contribution must match the circle's fixed amount exactly.",
+  7: 'The current cycle is still open — not every member has contributed yet.',
+  8: 'You have already contributed to this cycle.',
+  9: 'This circle has already started and is no longer accepting members.',
+};
+
+// Maps FactoryError enum codes to human-readable messages
+const FACTORY_ERROR_MESSAGES: Record<number, string> = {
+  1: 'The circle factory has not been initialized.',
+  2: 'The circle factory is already initialized.',
+  3: 'A circle with this ID already exists. Choose a different name.',
+};
+
+/** Which contract an error code should be read against. */
+export type ContractKind = 'split' | 'vault' | 'circle' | 'factory';
+
+const CONTRACT_ERROR_MESSAGES: Record<ContractKind, Record<number, string>> = {
+  split: SPLIT_ERROR_MESSAGES,
+  vault: VAULT_ERROR_MESSAGES,
+  circle: CIRCLE_ERROR_MESSAGES,
+  factory: FACTORY_ERROR_MESSAGES,
+};
+
 export type ErrorType =
   | 'wallet_not_installed'
   | 'user_rejected'
@@ -41,9 +71,14 @@ export interface AppError {
   friendbotUrl?: string;
 }
 
-export function decodeContractError(errorCode: number, isVault: boolean = false): string {
-  const messages = isVault ? VAULT_ERROR_MESSAGES : SPLIT_ERROR_MESSAGES;
-  return messages[errorCode] || `Unknown contract error (code: ${errorCode})`;
+export function decodeContractError(
+  errorCode: number,
+  contract: ContractKind = 'split',
+): string {
+  return (
+    CONTRACT_ERROR_MESSAGES[contract][errorCode] ||
+    `Unknown contract error (code: ${errorCode})`
+  );
 }
 
 function extractMessage(error: unknown): string {
@@ -58,7 +93,17 @@ function extractMessage(error: unknown): string {
   return String(error ?? '');
 }
 
-export function classifyError(error: unknown): AppError {
+/**
+ * Turn anything thrown during a contract call into a message worth showing.
+ *
+ * Contract error codes are only meaningful alongside the contract that raised
+ * them — every contract in this repo numbers its errors from 1 — so callers
+ * pass the contract they were talking to.
+ */
+export function classifyError(
+  error: unknown,
+  contract: ContractKind = 'split',
+): AppError {
   if (error instanceof AccountNotFundedError) {
     return {
       type: 'account_not_funded',
@@ -116,7 +161,7 @@ export function classifyError(error: unknown): AppError {
     const code = parseInt(contractMatch[1]);
     return {
       type: 'contract_error',
-      message: decodeContractError(code),
+      message: decodeContractError(code, contract),
       code,
       retryable: false,
     };

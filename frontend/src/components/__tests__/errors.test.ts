@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { classifyError } from '@/lib/errors';
+import { classifyError, decodeContractError } from '@/lib/errors';
 import { AccountNotFundedError } from '@/lib/soroban';
 
 describe('classifyError', () => {
@@ -39,6 +39,14 @@ describe('classifyError', () => {
     expect(result.code).toBe(3);
   });
 
+  it('reads a contract error code against the contract that raised it', () => {
+    const err = new Error('HostError: Error(Contract, #3)');
+
+    expect(classifyError(err, 'split').message).toContain('shares');
+    expect(classifyError(err, 'circle').message).toContain('full');
+    expect(classifyError(err, 'factory').message).toContain('already exists');
+  });
+
   it('classifies a network timeout as retryable', () => {
     const result = classifyError(new Error('request timeout'));
     expect(result.type).toBe('network_timeout');
@@ -49,5 +57,21 @@ describe('classifyError', () => {
     const result = classifyError(new Error('something completely unexpected'));
     expect(result.type).toBe('contract_error');
     expect(result.retryable).toBe(false);
+  });
+});
+
+describe('decodeContractError', () => {
+  it('defaults to the split registry codes', () => {
+    expect(decodeContractError(2)).toContain('Unauthorized');
+  });
+
+  it('decodes every circle error code', () => {
+    for (let code = 1; code <= 9; code++) {
+      expect(decodeContractError(code, 'circle')).not.toContain('Unknown');
+    }
+  });
+
+  it('reports an unmapped code rather than guessing', () => {
+    expect(decodeContractError(99, 'circle')).toBe('Unknown contract error (code: 99)');
   });
 });
