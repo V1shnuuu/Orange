@@ -4,6 +4,7 @@ import "./globals.css";
 import Nav from "@/components/Nav";
 import { WalletProvider } from "@/components/WalletProvider";
 import FeedbackFab from "@/components/FeedbackFab";
+import { SITE_URL } from "@/lib/site";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -21,6 +22,7 @@ import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "CirclePact — Decentralized ROSCA on Stellar",
   description:
     "CirclePact is a decentralized ROSCA protocol on the Stellar network. Create savings circles, contribute, and build your on-chain reputation.",
