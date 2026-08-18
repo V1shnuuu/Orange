@@ -130,3 +130,37 @@ fn test_a_single_default_clears_the_badge() {
     assert_eq!(client.get_score(&member).defaults, 1);
     assert_eq!(client.get_badge(&member), Badge::None);
 }
+
+#[test]
+fn test_circle_participation_is_counted() {
+    let (_env, client, member) = setup();
+
+    client.record_circle_joined(&member);
+    client.record_circle_joined(&member);
+
+    assert_eq!(client.get_score(&member).total_circles, 2);
+}
+
+#[test]
+fn test_circle_count_is_independent_of_cycle_outcomes() {
+    let (_env, client, member) = setup();
+
+    // One circle that ran for three cycles.
+    client.record_circle_joined(&member);
+    record_successes(&client, &member, 3);
+
+    let score = client.get_score(&member);
+    assert_eq!(score.total_circles, 1);
+    assert_eq!(score.successful_cycles, 3);
+}
+
+#[test]
+fn test_circle_count_survives_later_score_updates() {
+    let (_env, client, member) = setup();
+
+    client.record_circle_joined(&member);
+    client.update_score(&member, &true, &false, &false);
+    client.update_score(&member, &false, &true, &false);
+
+    assert_eq!(client.get_score(&member).total_circles, 1);
+}

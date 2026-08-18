@@ -25,8 +25,39 @@ pub enum Badge {
 #[contract]
 pub struct ReputationRegistryContract;
 
+/// The score a member carries before it has any recorded history. A member
+/// with no activity yet is given the benefit of the doubt on completion rate.
+fn blank_score() -> ReputationScore {
+    ReputationScore {
+        total_circles: 0,
+        successful_cycles: 0,
+        late_payments: 0,
+        defaults: 0,
+        completion_rate: 100,
+    }
+}
+
 #[contractimpl]
 impl ReputationRegistryContract {
+    /// Record that a member has taken part in another circle.
+    ///
+    /// Circle participation is counted separately from cycle outcomes: a
+    /// single circle produces one `record_circle_joined` call and one
+    /// `update_score` call per cycle.
+    pub fn record_circle_joined(env: Env, member: Address) {
+        let mut score: ReputationScore = env
+            .storage()
+            .persistent()
+            .get(&member)
+            .unwrap_or_else(blank_score);
+
+        score.total_circles += 1;
+        env.storage().persistent().set(&member, &score);
+
+        env.events()
+            .publish((symbol_short!("circ_add"), member), score.total_circles);
+    }
+
     pub fn update_score(
         env: Env,
         member: Address,
@@ -40,13 +71,7 @@ impl ReputationRegistryContract {
             .storage()
             .persistent()
             .get(&member)
-            .unwrap_or(ReputationScore {
-                total_circles: 0,
-                successful_cycles: 0,
-                late_payments: 0,
-                defaults: 0,
-                completion_rate: 100,
-            });
+            .unwrap_or_else(blank_score);
 
         if successful {
             score.successful_cycles += 1;
@@ -75,13 +100,7 @@ impl ReputationRegistryContract {
         env.storage()
             .persistent()
             .get(&member)
-            .unwrap_or(ReputationScore {
-                total_circles: 0,
-                successful_cycles: 0,
-                late_payments: 0,
-                defaults: 0,
-                completion_rate: 100,
-            })
+            .unwrap_or_else(blank_score)
     }
 
     pub fn get_badge(env: Env, member: Address) -> Badge {
