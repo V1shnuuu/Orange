@@ -38,6 +38,7 @@ fn setup_circle() -> (
         &Symbol::new(&env, "circle1"),
         &admin,
         &MAX_MEMBERS,
+        &CONTRIBUTION,
     );
 
     (env, circle_id, token_id, admin)
@@ -73,6 +74,7 @@ fn test_initialize_sets_cycle_defaults() {
     assert_eq!(cycle.next_payout_index, 0);
     assert_eq!(cycle.started, false);
 
+    assert_eq!(client.get_contribution_amount(), CONTRIBUTION);
     assert_eq!(client.get_members().len(), 0);
 }
 
@@ -87,6 +89,7 @@ fn test_initialize_twice_rejected() {
         &Symbol::new(&env, "circle2"),
         &admin,
         &MAX_MEMBERS,
+        &CONTRIBUTION,
     );
     assert_eq!(result, Err(Ok(CircleError::AlreadyInitialized)));
 }
@@ -170,21 +173,73 @@ fn test_contribute_by_non_member_rejected() {
 }
 
 #[test]
-fn test_contribute_rejects_non_positive_amount() {
+fn test_initialize_rejects_non_positive_contribution() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let circle_id = env.register(CircleCoreContract, ());
+    let token_admin = Address::generate(&env);
+    let token_id = env
+        .register_stellar_asset_contract_v2(token_admin)
+        .address()
+        .clone();
+    let client = CircleCoreContractClient::new(&env, &circle_id);
+
+    let result = client.try_initialize(
+        &Address::generate(&env),
+        &token_id,
+        &Symbol::new(&env, "circle1"),
+        &Address::generate(&env),
+        &MAX_MEMBERS,
+        &0,
+    );
+    assert_eq!(result, Err(Ok(CircleError::InvalidAmount)));
+}
+
+#[test]
+fn test_contribute_rejects_any_amount_but_the_circle_amount() {
     let (env, circle_id, token_id, _admin) = setup_circle();
     let client = CircleCoreContractClient::new(&env, &circle_id);
 
     let members = fill_circle(&env, &circle_id, &token_id);
     let member = members.get(0).unwrap();
 
-    assert_eq!(
-        client.try_contribute(&member, &0),
-        Err(Ok(CircleError::InvalidAmount))
-    );
-    assert_eq!(
-        client.try_contribute(&member, &-1),
-        Err(Ok(CircleError::InvalidAmount))
-    );
+    for amount in [0, -1, CONTRIBUTION - 1, CONTRIBUTION * 2] {
+        assert_eq!(
+            client.try_contribute(&member, &amount),
+            Err(Ok(CircleError::InvalidAmount))
+        );
+    }
+
+    // The rejected attempts left nothing behind.
+    assert_eq!(TokenClient::new(&env, &token_id).balance(&circle_id), 0);
+    assert_eq!(client.get_cycle_info().contributions_this_cycle, 0);
+}
+
+#[test]
+fn test_underpaying_member_cannot_shrink_the_pot() {
+    let (env, circle_id, token_id, _admin) = setup_circle();
+    let client = CircleCoreContractClient::new(&env, &circle_id);
+    let token = TokenClient::new(&env, &token_id);
+
+    let members = fill_circle(&env, &circle_id, &token_id);
+
+    // The member who closes the cycle used to set the payout size, so paying
+    // in less than everybody else would have shorted the recipient.
+    for (index, member) in members.iter().enumerate() {
+        if index == MAX_MEMBERS as usize - 1 {
+            assert_eq!(
+                client.try_contribute(&member, &1),
+                Err(Ok(CircleError::InvalidAmount))
+            );
+        }
+        client.contribute(&member, &CONTRIBUTION);
+    }
+
+    let recipient = members.get(0).unwrap();
+    let pot = CONTRIBUTION * MAX_MEMBERS as i128;
+    assert_eq!(token.balance(&recipient), MINT_AMOUNT - CONTRIBUTION + pot);
+    assert_eq!(token.balance(&circle_id), 0);
 }
 
 #[test]

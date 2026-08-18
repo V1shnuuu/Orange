@@ -36,6 +36,7 @@ pub enum DataKey {
     Admin,
     Members,
     Member(Address),
+    ContributionAmount,
     CycleInfo,
     TotalContributed,
     Initialized,
@@ -63,15 +64,21 @@ impl CircleCoreContract {
         circle_id: Symbol,
         admin: Address,
         max_members: u32,
+        contribution_amount: i128,
     ) -> Result<(), CircleError> {
         if env.storage().instance().has(&DataKey::Initialized) {
             return Err(CircleError::AlreadyInitialized);
+        }
+
+        if contribution_amount <= 0 {
+            return Err(CircleError::InvalidAmount);
         }
 
         env.storage().instance().set(&DataKey::FactoryId, &factory_id);
         env.storage().instance().set(&DataKey::TokenId, &token_id);
         env.storage().instance().set(&DataKey::CircleId, &circle_id);
         env.storage().instance().set(&DataKey::Admin, &admin);
+        env.storage().instance().set(&DataKey::ContributionAmount, &contribution_amount);
         
         env.storage().instance().set(&DataKey::Members, &Vec::<Address>::new(&env));
         env.storage().instance().set(&DataKey::CycleInfo, &CycleInfo {
@@ -143,8 +150,15 @@ impl CircleCoreContract {
             return Err(CircleError::NotInitialized); // Circle hasn't started yet
         }
 
-        // We assume the amount matches the contribution_amount (should be verified via factory call in a real app, keeping it simple here)
-        if amount <= 0 {
+        // Every member of a ROSCA pays the same amount into each cycle. The pot
+        // handed out below is priced off that figure, so an off-amount payment
+        // would either short the recipient or overdraw the circle.
+        let contribution_amount: i128 = env
+            .storage()
+            .instance()
+            .get(&DataKey::ContributionAmount)
+            .unwrap();
+        if amount != contribution_amount {
             return Err(CircleError::InvalidAmount);
         }
 
@@ -170,7 +184,7 @@ impl CircleCoreContract {
         // Check for payout
         let max_cycles = cycle_info.max_cycles;
         if cycle_info.contributions_this_cycle == max_cycles {
-            Self::execute_payout(&env, &mut cycle_info, amount * max_cycles as i128)?;
+            Self::execute_payout(&env, &mut cycle_info, contribution_amount * max_cycles as i128)?;
         } else {
             env.storage().instance().set(&DataKey::CycleInfo, &cycle_info);
         }
@@ -218,6 +232,10 @@ impl CircleCoreContract {
 
     pub fn get_cycle_info(env: Env) -> CycleInfo {
         env.storage().instance().get(&DataKey::CycleInfo).unwrap()
+    }
+
+    pub fn get_contribution_amount(env: Env) -> i128 {
+        env.storage().instance().get(&DataKey::ContributionAmount).unwrap_or(0)
     }
 
     pub fn get_members(env: Env) -> Vec<Address> {
