@@ -104,3 +104,6 @@ impl ReputationRegistryContract {
         }
     }
 }
+
+#[cfg(test)]
+mod test;
