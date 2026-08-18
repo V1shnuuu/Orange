@@ -39,9 +39,12 @@ export const CIRCLE_CORE_METHODS = {
   GET_CYCLE_INFO: 'get_cycle_info',
   GET_MEMBERS: 'get_members',
   GET_MEMBER_INFO: 'get_member_info',
+  GET_CONTRIBUTION_AMOUNT: 'get_contribution_amount',
 } as const;
 
 export const REPUTATION_METHODS = {
+  RECORD_CIRCLE_JOINED: 'record_circle_joined',
+  UPDATE_SCORE: 'update_score',
   GET_SCORE: 'get_score',
   GET_BADGE: 'get_badge',
 } as const;
