@@ -1,4 +1,4 @@
-name: SplitStream CI
+name: CirclePact CI
 
 on:
   push:

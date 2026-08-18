@@ -1,4 +1,4 @@
-# Contributing to SplitStream
+# Contributing to CirclePact
 
 Thank you for your interest in contributing! This document explains how to set up your development environment, run tests, and submit changes.
 
