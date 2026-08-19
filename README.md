@@ -10,7 +10,7 @@ Next.js 16 frontend (`frontend/`), plus compiled Midnight Compact artifacts
 
 ## Links
 
-- Live demo: [https://circlepact-mvp.vercel.app](https://circlepact-mvp.vercel.app)
+- Live demo: [https://circlepact-mvp.vercel.app](https://orange-ten-lac.vercel.app/)
 - Demo walkthrough: [assets/demo_walkthrough.md](assets/demo_walkthrough.md)
 - GitHub repository: [https://github.com/V1shnuuu/Orange](https://github.com/V1shnuuu/Orange)
 - CI pipeline: [.github/workflows/ci.yml](.github/workflows/ci.yml)
