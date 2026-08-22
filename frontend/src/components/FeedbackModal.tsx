@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Check } from 'lucide-react';
 import Button from './Button';
+import { useWallet } from './WalletProvider';
 
 interface FeedbackModalProps {
   isOpen: boolean;
@@ -11,8 +12,11 @@ interface FeedbackModalProps {
 }
 
 export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
+  const { publicKey } = useWallet();
   const [feedback, setFeedback] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Close on Escape while the modal is open
   useEffect(() => {
@@ -24,16 +28,41 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [isOpen, onClose]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real MVP, send this to an API or Discord webhook
-    console.log('Feedback submitted:', feedback);
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setFeedback('');
-      onClose();
-    }, 2000);
+    if (isSending) return;
+
+    setIsSending(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: feedback,
+          wallet: publicKey ?? undefined,
+          path: typeof window !== 'undefined' ? window.location.pathname : undefined,
+        }),
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.ok) {
+        throw new Error(result.error || 'Could not send feedback.');
+      }
+
+      setSubmitted(true);
+      setTimeout(() => {
+        setSubmitted(false);
+        setFeedback('');
+        onClose();
+      }, 2000);
+    } catch (err) {
+      // Only claim it was received once it actually was.
+      setError(err instanceof Error ? err.message : 'Could not send feedback.');
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -95,8 +124,16 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                     className="input-field min-h-[128px] resize-none"
                     required
                   />
-                  <Button type="submit" className="w-full">
-                    Submit feedback
+                  {error && (
+                    <p
+                      role="alert"
+                      className="rounded-xl border border-error/30 bg-error-bg px-3 py-2 text-xs leading-relaxed text-error"
+                    >
+                      {error}
+                    </p>
+                  )}
+                  <Button type="submit" className="w-full" disabled={isSending}>
+                    {isSending ? 'Sending…' : 'Submit feedback'}
                   </Button>
                 </form>
               )}

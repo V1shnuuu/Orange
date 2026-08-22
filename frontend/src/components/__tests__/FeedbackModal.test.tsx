@@ -1,6 +1,11 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import FeedbackModal from '../FeedbackModal';
+
+// The modal reads the connected wallet to attach it to the submission.
+vi.mock('../WalletProvider', () => ({
+  useWallet: () => ({ publicKey: null }),
+}));
 
 // Mock motion/react
 vi.mock('motion/react', () => ({
@@ -63,6 +68,68 @@ describe('FeedbackModal', () => {
     render(<FeedbackModal isOpen={false} onClose={onClose} />);
 
     fireEvent.keyDown(document, { key: 'Escape' });
+    expect(onClose).not.toHaveBeenCalled();
+  });
+});
+
+describe('FeedbackModal submission', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn());
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const submit = async (text = 'the join button was confusing') => {
+    const textarea = screen.getByPlaceholderText('Your thoughts…');
+    fireEvent.change(textarea, { target: { value: text } });
+    fireEvent.submit(textarea.closest('form')!);
+  };
+
+  it('posts the feedback to the API', async () => {
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ ok: true }),
+    });
+
+    render(<FeedbackModal isOpen onClose={() => {}} />);
+    await submit('the join button was confusing');
+
+    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledTimes(1));
+
+    const [url, init] = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(url).toBe('/api/feedback');
+    expect(JSON.parse(init.body).message).toBe('the join button was confusing');
+  });
+
+  it('surfaces the error instead of claiming the feedback was received', async () => {
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ ok: false, error: 'Feedback storage is not configured.' }),
+    });
+
+    render(<FeedbackModal isOpen onClose={() => {}} />);
+    await submit();
+
+    // The old console.log build always showed the thank-you screen, even
+    // though nothing was ever stored.
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Feedback storage is not configured.'
+    );
+    expect(screen.queryByText(/thank/i)).not.toBeInTheDocument();
+  });
+
+  it('does not close the modal when delivery fails', async () => {
+    const onClose = vi.fn();
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+      new Error('network down')
+    );
+
+    render(<FeedbackModal isOpen onClose={onClose} />);
+    await submit();
+
+    await screen.findByRole('alert');
     expect(onClose).not.toHaveBeenCalled();
   });
 });
