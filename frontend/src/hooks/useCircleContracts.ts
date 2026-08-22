@@ -2,9 +2,9 @@
 
 import { useSorobanContract } from './useSorobanContract';
 import { useWallet } from '@/components/WalletProvider';
-import { useCallback, useState } from 'react';
-import { invokeContract, arg } from '@/lib/soroban';
-import { CIRCLE_FACTORY_CONTRACT_ID } from '@/lib/contracts';
+import { useCallback, useEffect, useState } from 'react';
+import { invokeContract, readContract, arg } from '@/lib/soroban';
+import { CIRCLE_CORE_CONTRACT_ID, USDC_TOKEN_CONTRACT_ID } from '@/lib/contracts';
 import { toSorobanSymbol, generateCircleId } from '@/lib/stellar';
 
 export interface CircleData {
@@ -15,16 +15,96 @@ export interface CircleData {
   currentMembers: number;
   cycleDurationDays: number;
   members: string[];
-  /**
-   * True when this circle's creation was a real, verifiable transaction
-   * against the deployed circle-factory contract on Stellar testnet.
-   * Membership/contribution/payout state below is still tracked locally —
-   * circle-core is deployed as a single-instance contract and doesn't yet
-   * support multiple concurrent circles, so those actions aren't on-chain
-   * yet (see README's "Known gaps" section).
-   */
-  isOnChain?: boolean;
-  createCircleTxHash?: string;
+  /** 1-based index of the cycle currently collecting contributions. */
+  currentCycle: number;
+  /** How many members have paid into the current cycle. */
+  contributionsThisCycle: number;
+  /** Index into `members` of whoever the next pot goes to. */
+  nextPayoutIndex: number;
+  started: boolean;
+  completed: boolean;
+  /** Total ever paid in, in stroops. */
+  totalContributed: string;
+}
+
+/** Shape returned by circle-core's `get_circle`, after scValToNative. */
+interface RawCircleState {
+  name: string;
+  cycle_duration: number;
+  admin: string;
+  token: string;
+  contribution_amount: bigint;
+  members: string[];
+  max_members: number;
+  current_cycle: number;
+  contributions_this_cycle: number;
+  next_payout_index: number;
+  started: boolean;
+  completed: boolean;
+  total_contributed: bigint;
+}
+
+function toCircleData(id: string, raw: RawCircleState): CircleData {
+  return {
+    id,
+    name: raw.name,
+    contributionAmount: raw.contribution_amount.toString(),
+    maxMembers: raw.max_members,
+    currentMembers: raw.members.length,
+    cycleDurationDays: raw.cycle_duration,
+    members: raw.members,
+    currentCycle: raw.current_cycle,
+    contributionsThisCycle: raw.contributions_this_cycle,
+    nextPayoutIndex: raw.next_payout_index,
+    started: raw.started,
+    completed: raw.completed,
+    totalContributed: raw.total_contributed.toString(),
+  };
+}
+
+function requireCoreContract(): string {
+  if (!CIRCLE_CORE_CONTRACT_ID) {
+    throw new Error(
+      'Circle contract is not configured (NEXT_PUBLIC_CIRCLE_CORE_CONTRACT_ID is missing).'
+    );
+  }
+  return CIRCLE_CORE_CONTRACT_ID;
+}
+
+/**
+ * Read every circle the contract knows about.
+ *
+ * Kept outside the hook so the mount effect can drive it purely through
+ * promise callbacks — no state is touched synchronously.
+ */
+async function fetchCircles(sourceAddress?: string): Promise<CircleData[]> {
+  const contractId = requireCoreContract();
+
+  const ids = (await readContract({
+    contractId,
+    method: 'list_circles',
+    sourceAddress,
+  })) as string[] | undefined;
+
+  const loaded = await Promise.all(
+    (ids ?? []).map(async (id) => {
+      const raw = (await readContract({
+        contractId,
+        method: 'get_circle',
+        args: [arg(id, 'symbol')],
+        sourceAddress,
+      })) as RawCircleState | undefined;
+
+      return raw ? toCircleData(id, raw) : null;
+    })
+  );
+
+  // Newest first — list_circles returns them in creation order.
+  return loaded.filter((c): c is CircleData => c !== null).reverse();
+}
+
+function messageOf(error: unknown): string {
+  return error instanceof Error ? error.message : 'Failed to load circles';
 }
 
 export function useCircleContracts() {
@@ -32,123 +112,160 @@ export function useCircleContracts() {
   const address = publicKey;
   const { txState, execute, reset } = useSorobanContract();
 
-  // Seed data for the MVP frontend so the list/dashboard aren't empty before
-  // any real circle has been created. Real circles created via createCircle()
-  // are prepended to this list with isOnChain: true.
-  const [circles, setCircles] = useState<CircleData[]>([
-    {
-      id: 'circle-alpha',
-      name: 'Alpha Savings',
-      contributionAmount: '500000000', // 50 USDC
-      maxMembers: 5,
-      currentMembers: 3,
-      cycleDurationDays: 7,
-      members: ['GDT...', 'GBX...'],
-    },
-    {
-      id: 'circle-beta',
-      name: 'Beta Accumulators',
-      contributionAmount: '1000000000', // 100 USDC
-      maxMembers: 10,
-      currentMembers: 10,
-      cycleDurationDays: 30,
-      members: [
-        'GDT42G5...M9QZ',
-        'GBX8M2T...L4P1',
-        'GA2P9Q7...R5X8',
-        'GCF1V4B...N9M2',
-        'GBL5K8J...H3T7',
-        'GDP9Z3M...W4R1',
-        'GAT7C2V...B8L9',
-        'GCX4M9N...Q2P5',
-        'GBR1H8F...T7K3',
-        'GDV5B2C...M4Z8'
-      ],
-    }
-  ]);
+  const [circles, setCircles] = useState<CircleData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  const createCircle = useCallback(async (params: { name: string, amount: string, maxMembers: number, duration: number }) => {
-    if (!address) throw new Error('Wallet not connected');
-    if (!CIRCLE_FACTORY_CONTRACT_ID) {
-      throw new Error('Circle factory contract is not configured (NEXT_PUBLIC_CIRCLE_FACTORY_CONTRACT_ID is missing).');
-    }
+  useEffect(() => {
+    let active = true;
 
-    return execute(async () => {
-      const circleId = generateCircleId();
-      const nameSymbol = toSorobanSymbol(params.name);
-
-      // Real, signed transaction against the deployed circle-factory contract.
-      const { hash } = await invokeContract({
-        contractId: CIRCLE_FACTORY_CONTRACT_ID,
-        method: 'create_circle',
-        sourceAddress: address,
-        signTransaction,
-        args: [
-          arg(address, 'address'),
-          arg(circleId, 'symbol'),
-          arg(nameSymbol, 'symbol'),
-          arg(BigInt(params.amount), 'i128'),
-          arg(params.maxMembers, 'u32'),
-          arg(params.duration, 'u32'),
-        ],
+    fetchCircles(address ?? undefined)
+      .then((loaded) => {
+        if (!active) return;
+        setCircles(loaded);
+        setLoadError(null);
+      })
+      .catch((error) => {
+        if (!active) return;
+        setLoadError(messageOf(error));
+      })
+      .finally(() => {
+        if (active) setIsLoading(false);
       });
 
-      const newCircle: CircleData = {
-        id: circleId,
-        name: params.name,
-        contributionAmount: params.amount,
-        maxMembers: params.maxMembers,
-        currentMembers: 1,
-        cycleDurationDays: params.duration,
-        members: [address],
-        isOnChain: true,
-        createCircleTxHash: hash,
-      };
+    return () => {
+      active = false;
+    };
+  }, [address]);
 
-      setCircles(prev => [newCircle, ...prev]);
+  /** Re-read chain state, e.g. after a transaction confirms. */
+  const refresh = useCallback(async () => {
+    try {
+      setCircles(await fetchCircles(address ?? undefined));
+      setLoadError(null);
+    } catch (error) {
+      setLoadError(messageOf(error));
+    }
+  }, [address]);
 
-      return {
-        hash,
-        result: circleId,
-      };
-    });
-  }, [address, execute, signTransaction]);
+  const createCircle = useCallback(
+    async (params: { name: string; amount: string; maxMembers: number; duration: number }) => {
+      if (!address) throw new Error('Wallet not connected');
+      const contractId = requireCoreContract();
+      if (!USDC_TOKEN_CONTRACT_ID) {
+        throw new Error(
+          'Token contract is not configured (NEXT_PUBLIC_USDC_TOKEN_CONTRACT_ID is missing).'
+        );
+      }
 
-  const joinCircle = useCallback(async (circleId: string) => {
-    if (!address) throw new Error('Wallet not connected');
+      return execute(async () => {
+        const circleId = generateCircleId();
 
-    // Not yet wired to circle-core: it's deployed as a single-instance
-    // contract with no per-circle deployment mechanism, so it can't back
-    // more than one circle today. Tracked locally until that's resolved.
-    return execute(async () => {
-      await new Promise(r => setTimeout(r, 1200));
+        const { hash } = await invokeContract({
+          contractId,
+          method: 'initialize',
+          sourceAddress: address,
+          signTransaction,
+          args: [
+            arg(circleId, 'symbol'),
+            arg(toSorobanSymbol(params.name), 'symbol'),
+            arg(address, 'address'),
+            arg(USDC_TOKEN_CONTRACT_ID, 'address'),
+            arg(params.maxMembers, 'u32'),
+            arg(BigInt(params.amount), 'i128'),
+            arg(params.duration, 'u32'),
+          ],
+        });
 
-      setCircles(prev => prev.map(c =>
-        c.id === circleId
-          ? { ...c, currentMembers: c.currentMembers + 1, members: [...c.members, address] }
-          : c
-      ));
+        // The creator takes the first seat, which is also the first payout.
+        await invokeContract({
+          contractId,
+          method: 'join_circle',
+          sourceAddress: address,
+          signTransaction,
+          args: [arg(circleId, 'symbol'), arg(address, 'address')],
+        });
 
-      return { hash: `tx_${Date.now()}` };
-    });
-  }, [address, execute]);
+        await refresh();
+        return { hash, result: circleId };
+      });
+    },
+    [address, execute, signTransaction, refresh]
+  );
 
-  const contributeToCircle = useCallback(async (circleId: string, amount: string) => {
-    if (!address) throw new Error('Wallet not connected');
+  const joinCircle = useCallback(
+    async (circleId: string) => {
+      if (!address) throw new Error('Wallet not connected');
+      const contractId = requireCoreContract();
 
-    // Not yet wired to circle-core — see joinCircle for why.
-    return execute(async () => {
-      await new Promise(r => setTimeout(r, 2000));
-      return { hash: `tx_${Date.now()}` };
-    });
-  }, [address, execute]);
+      return execute(async () => {
+        const { hash } = await invokeContract({
+          contractId,
+          method: 'join_circle',
+          sourceAddress: address,
+          signTransaction,
+          args: [arg(circleId, 'symbol'), arg(address, 'address')],
+        });
+
+        await refresh();
+        return { hash };
+      });
+    },
+    [address, execute, signTransaction, refresh]
+  );
+
+  const leaveCircle = useCallback(
+    async (circleId: string) => {
+      if (!address) throw new Error('Wallet not connected');
+      const contractId = requireCoreContract();
+
+      return execute(async () => {
+        const { hash } = await invokeContract({
+          contractId,
+          method: 'leave_circle',
+          sourceAddress: address,
+          signTransaction,
+          args: [arg(circleId, 'symbol'), arg(address, 'address')],
+        });
+
+        await refresh();
+        return { hash };
+      });
+    },
+    [address, execute, signTransaction, refresh]
+  );
+
+  const contributeToCircle = useCallback(
+    async (circleId: string, amount: string) => {
+      if (!address) throw new Error('Wallet not connected');
+      const contractId = requireCoreContract();
+
+      return execute(async () => {
+        const { hash } = await invokeContract({
+          contractId,
+          method: 'contribute',
+          sourceAddress: address,
+          signTransaction,
+          args: [arg(circleId, 'symbol'), arg(address, 'address'), arg(BigInt(amount), 'i128')],
+        });
+
+        await refresh();
+        return { hash };
+      });
+    },
+    [address, execute, signTransaction, refresh]
+  );
 
   return {
     circles,
+    isLoading,
+    loadError,
     txState,
+    refresh,
     createCircle,
     joinCircle,
+    leaveCircle,
     contributeToCircle,
-    resetTxState: reset
+    resetTxState: reset,
   };
 }

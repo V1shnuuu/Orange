@@ -11,7 +11,11 @@ interface CircleCardProps {
   maxMembers: number;
   currentMembers: number;
   cycleDurationDays: number;
-  isOnChain?: boolean;
+  /** True once every seat is taken and cycles have begun. */
+  started?: boolean;
+  /** True once every member has been paid out once. */
+  completed?: boolean;
+  currentCycle?: number;
 }
 
 export default function CircleCard({
@@ -21,7 +25,9 @@ export default function CircleCard({
   maxMembers,
   currentMembers,
   cycleDurationDays,
-  isOnChain,
+  started,
+  completed,
+  currentCycle,
 }: CircleCardProps) {
   const isFull = currentMembers >= maxMembers;
   const progressPercent = (currentMembers / maxMembers) * 100;
@@ -42,10 +48,19 @@ export default function CircleCard({
         </span>
       </div>
 
-      {isOnChain && (
+      {completed ? (
+        <span className="mb-4 inline-flex w-fit items-center gap-1.5 rounded-full border border-border bg-white/5 px-2.5 py-1 text-[11px] font-medium text-text-muted">
+          <CircleCheck size={12} />
+          Completed
+        </span>
+      ) : started ? (
         <span className="mb-4 inline-flex w-fit items-center gap-1.5 rounded-full border border-accent/25 bg-accent/10 px-2.5 py-1 text-[11px] font-medium text-accent">
           <CircleCheck size={12} />
-          On-chain
+          Cycle {Math.min(currentCycle ?? 1, maxMembers)} of {maxMembers}
+        </span>
+      ) : (
+        <span className="mb-4 inline-flex w-fit items-center gap-1.5 rounded-full border border-border bg-white/5 px-2.5 py-1 text-[11px] font-medium text-text-secondary">
+          Open &middot; {maxMembers - currentMembers} seats left
         </span>
       )}
 

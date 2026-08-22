@@ -1,4 +1,5 @@
 import {
+  Account,
   Contract,
   TransactionBuilder,
   BASE_FEE,
@@ -39,6 +40,19 @@ const POLL_INTERVAL_MS = 1500;
 const CONFIRMATION_TIMEOUT_MS = 30_000;
 
 /**
+ * Any well-formed account id works as the source of a read-only simulation:
+ * nothing is signed or submitted, so it needs neither a balance nor a real
+ * sequence number. Used when no wallet is connected.
+ */
+const READ_ONLY_SOURCE = 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF';
+
+function buildArgs(args: ContractArg[]) {
+  return args.map(({ value, type }) =>
+    nativeToScVal(value, { type: type as NativeToScValOpts['type'] })
+  );
+}
+
+/**
  * Thrown when the source account doesn't exist on the ledger yet (i.e. it has
  * never been funded). Distinguishes this from other simulation/network
  * failures so the UI can point the user at the testnet friendbot.
@@ -48,6 +62,51 @@ export class AccountNotFundedError extends Error {
     super(`Account ${address} is not funded on this network yet.`);
     this.name = 'AccountNotFundedError';
   }
+}
+
+/**
+ * Reads a contract view function by simulating a call — nothing is signed,
+ * submitted, or charged, so this is safe to poll and works with no wallet
+ * connected.
+ *
+ * Returns the decoded native value, or `undefined` when the function returns
+ * void. Throws when the simulation itself fails, which for a view function
+ * means the contract rejected the arguments.
+ */
+export async function readContract({
+  contractId,
+  method,
+  args = [],
+  sourceAddress,
+}: {
+  contractId: string;
+  method: string;
+  args?: ContractArg[];
+  sourceAddress?: string;
+}): Promise<unknown> {
+  const server = getServer();
+
+  // A sequence number is irrelevant to a simulation, so this avoids the
+  // network round-trip that fetching the real account would cost.
+  const source = new Account(sourceAddress || READ_ONLY_SOURCE, '0');
+  const contract = new Contract(contractId);
+
+  const tx = new TransactionBuilder(source, {
+    fee: BASE_FEE,
+    networkPassphrase: NETWORK_PASSPHRASE,
+  })
+    .addOperation(contract.call(method, ...buildArgs(args)))
+    .setTimeout(30)
+    .build();
+
+  const sim = await server.simulateTransaction(tx);
+
+  if (rpc.Api.isSimulationError(sim)) {
+    throw new Error(sim.error);
+  }
+
+  const retval = (sim as rpc.Api.SimulateTransactionSuccessResponse).result?.retval;
+  return retval ? scValToNative(retval) : undefined;
 }
 
 /**
@@ -78,10 +137,7 @@ export async function invokeContract({
   }
 
   const contract = new Contract(contractId);
-  const scArgs = args.map(({ value, type }) =>
-    nativeToScVal(value, { type: type as NativeToScValOpts['type'] })
-  );
-  const operation = contract.call(method, ...scArgs);
+  const operation = contract.call(method, ...buildArgs(args));
 
   const builtTx = new TransactionBuilder(account, {
     fee: BASE_FEE,

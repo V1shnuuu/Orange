@@ -3,24 +3,32 @@
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useMemo } from 'react';
-import { ArrowLeft, CircleCheck, Info, ExternalLink } from 'lucide-react';
+import { ArrowLeft, CircleCheck, Info } from 'lucide-react';
 import { useCircleContracts } from '@/hooks/useCircleContracts';
 import { useWallet } from '@/components/WalletProvider';
-import { formatAmount, stellarExpertTxUrl } from '@/lib/stellar';
+import { formatAmount } from '@/lib/stellar';
 import ProgressRing from '@/components/ProgressRing';
 import Timeline from '@/components/Timeline';
 import MemberCard from '@/components/MemberCard';
 import TransactionStatusCard from '@/components/TransactionStatusCard';
 import ErrorBanner from '@/components/ErrorBanner';
 import EmptyState from '@/components/EmptyState';
+import LoadingSkeleton from '@/components/LoadingSkeleton';
 import Button from '@/components/Button';
 
 export default function CircleDashboardPage() {
   const params = useParams();
   const id = params.id as string;
   const { publicKey: address } = useWallet();
-  const { circles, joinCircle, contributeToCircle, txState, resetTxState } =
-    useCircleContracts();
+  const {
+    circles,
+    isLoading,
+    joinCircle,
+    leaveCircle,
+    contributeToCircle,
+    txState,
+    resetTxState,
+  } = useCircleContracts();
 
   const circle = circles.find((c) => c.id === id);
   const isMember = address ? circle?.members.includes(address) : false;
@@ -29,6 +37,14 @@ export default function CircleDashboardPage() {
   const handleJoin = async () => {
     try {
       await joinCircle(id);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleLeave = async () => {
+    try {
+      await leaveCircle(id);
     } catch (e) {
       console.error(e);
     }
@@ -43,27 +59,43 @@ export default function CircleDashboardPage() {
   };
 
   const timelineEvents = useMemo(() => {
+    if (!circle) return [];
+
+    const recipient = circle.members[circle.nextPayoutIndex];
+
     return [
       {
-        title: 'Cycle started',
-        description: 'Waiting for all members to contribute.',
-        date: 'Now',
-        status: 'completed' as const,
+        title: circle.started ? 'Circle started' : 'Filling seats',
+        description: circle.started
+          ? `All ${circle.maxMembers} seats taken.`
+          : `${circle.currentMembers} of ${circle.maxMembers} seats taken.`,
+        date: circle.started ? 'Done' : 'In progress',
+        status: circle.started ? ('completed' as const) : ('current' as const),
       },
       {
-        title: 'Contributions',
-        description: '2/5 members paid',
-        date: 'In progress',
-        status: 'current' as const,
+        title: `Cycle ${circle.currentCycle} contributions`,
+        description: `${circle.contributionsThisCycle}/${circle.maxMembers} members paid`,
+        date: circle.started ? 'In progress' : 'Waiting for a full circle',
+        status: circle.started ? ('current' as const) : ('upcoming' as const),
       },
       {
         title: 'Payout',
-        description: 'To be disbursed to Member 1',
-        date: 'End of cycle',
-        status: 'upcoming' as const,
+        description: recipient
+          ? `Next pot goes to ${recipient.slice(0, 4)}...${recipient.slice(-4)}`
+          : 'Recipient decided once the circle fills',
+        date: circle.completed ? 'Circle complete' : 'End of cycle',
+        status: circle.completed ? ('completed' as const) : ('upcoming' as const),
       },
     ];
-  }, []);
+  }, [circle]);
+
+  if (isLoading && !circle) {
+    return (
+      <div className="container py-14">
+        <LoadingSkeleton />
+      </div>
+    );
+  }
 
   if (!circle) {
     return (
@@ -83,8 +115,12 @@ export default function CircleDashboardPage() {
   }
 
   const totalPool = BigInt(circle.contributionAmount) * BigInt(circle.maxMembers);
-  const currentPool = BigInt(circle.contributionAmount) * BigInt(2); // Simulated
+  const currentPool =
+    BigInt(circle.contributionAmount) * BigInt(circle.contributionsThisCycle);
   const poolPercent = Number((currentPool * BigInt(100)) / totalPool);
+  const memberIndex = address ? circle.members.indexOf(address) : -1;
+  const hasContributedThisCycle =
+    memberIndex >= 0 && memberIndex < circle.contributionsThisCycle;
 
   return (
     <div className="container py-14">
@@ -125,25 +161,25 @@ export default function CircleDashboardPage() {
           <div className="glass-card p-7 text-center">
             <h1 className="heading-page mb-1 text-white">{circle.name}</h1>
 
-            {circle.isOnChain ? (
-              <a
-                href={circle.createCircleTxHash ? stellarExpertTxUrl(circle.createCircleTxHash) : undefined}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-accent/25 bg-accent/10 px-2.5 py-1 text-[11px] font-medium text-accent transition-colors hover:border-accent/40"
-              >
-                <CircleCheck size={12} />
-                Created on-chain
-                {circle.createCircleTxHash && <ExternalLink size={10} />}
-              </a>
-            ) : (
+            {circle.completed ? (
               <span className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-border bg-white/5 px-2.5 py-1 text-[11px] font-medium text-text-muted">
-                Demo circle
+                <CircleCheck size={12} />
+                Completed
+              </span>
+            ) : circle.started ? (
+              <span className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-accent/25 bg-accent/10 px-2.5 py-1 text-[11px] font-medium text-accent">
+                <CircleCheck size={12} />
+                Running
+              </span>
+            ) : (
+              <span className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-border bg-white/5 px-2.5 py-1 text-[11px] font-medium text-text-secondary">
+                Open &middot; {circle.maxMembers - circle.currentMembers} seats left
               </span>
             )}
 
             <p className="mb-7 text-sm text-text-secondary">
-              Cycle 1 of {circle.maxMembers}
+              Cycle {Math.min(circle.currentCycle, circle.maxMembers)} of{' '}
+              {circle.maxMembers}
             </p>
 
             <div className="mb-7 flex justify-center">
@@ -175,24 +211,46 @@ export default function CircleDashboardPage() {
             {!isMember ? (
               <Button
                 onClick={handleJoin}
-                disabled={isFull}
-                variant={isFull ? 'outline' : 'primary'}
+                disabled={isFull || circle.completed}
+                variant={isFull || circle.completed ? 'outline' : 'primary'}
                 size="lg"
                 className="w-full"
               >
-                {isFull ? 'Circle full' : 'Join circle'}
+                {circle.completed
+                  ? 'Circle complete'
+                  : isFull
+                    ? 'Circle full'
+                    : 'Join circle'}
+              </Button>
+            ) : circle.completed ? (
+              <Button disabled variant="outline" size="lg" className="w-full">
+                Circle complete
+              </Button>
+            ) : circle.started ? (
+              <Button
+                onClick={handleContribute}
+                disabled={hasContributedThisCycle}
+                variant={hasContributedThisCycle ? 'outline' : 'primary'}
+                size="lg"
+                className="w-full"
+              >
+                {hasContributedThisCycle ? 'Paid this cycle' : 'Pay contribution'}
               </Button>
             ) : (
-              <Button onClick={handleContribute} size="lg" className="w-full">
-                Pay contribution
+              <Button
+                onClick={handleLeave}
+                variant="outline"
+                size="lg"
+                className="w-full"
+              >
+                Leave circle
               </Button>
             )}
 
             <p className="mt-4 flex items-start gap-1.5 text-left text-xs leading-relaxed text-text-muted">
               <Info size={13} className="mt-0.5 shrink-0" />
-              Joining and contributing are simulated in this build — the on-chain
-              circle-core contract doesn&apos;t support multiple circles yet, so
-              these actions update local state only.
+              Joining, leaving and contributing are signed in your wallet and
+              settled on Stellar testnet by the circle-core contract.
             </p>
           </div>
 
@@ -222,8 +280,8 @@ export default function CircleDashboardPage() {
                   key={member}
                   address={member}
                   joinedAt={new Date()}
-                  tier={idx === 0 ? 'Gold' : 'Silver'} // Simulated tier
-                  hasContributed={idx === 0}
+                  tier="None"
+                  hasContributed={idx < circle.contributionsThisCycle}
                   isCurrentUser={address === member}
                 />
               ))}

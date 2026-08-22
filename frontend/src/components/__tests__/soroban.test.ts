@@ -4,8 +4,12 @@ import { arg, AccountNotFundedError } from '@/lib/soroban';
 // Mock the RPC server so invokeContract's account-lookup step can be
 // exercised without a live network call.
 const getAccountMock = vi.fn();
+const simulateTransactionMock = vi.fn();
 vi.mock('@/lib/stellar', () => ({
-  getServer: () => ({ getAccount: getAccountMock }),
+  getServer: () => ({
+    getAccount: getAccountMock,
+    simulateTransaction: simulateTransactionMock,
+  }),
   NETWORK_PASSPHRASE: 'Test SDF Network ; September 2015',
 }));
 
@@ -42,5 +46,56 @@ describe('invokeContract', () => {
         args: [arg('GCHE645J3234KFRIEOH3Z76JU3N27SAKTCKH6QFTZMK2T5MQZ5CBJHV4', 'address')],
       })
     ).rejects.toBeInstanceOf(AccountNotFundedError);
+  });
+});
+
+
+describe('readContract', () => {
+  const CONTRACT = 'CDKN4ZKKEH2CVHOJ36QKSTYFMISMHUJSDAWK2SCISDAD3W2PQPNDAR3W';
+
+  it('decodes the simulated return value', async () => {
+    const { nativeToScVal } = await import('@stellar/stellar-sdk');
+    simulateTransactionMock.mockResolvedValueOnce({
+      result: { retval: nativeToScVal(42, { type: 'u32' }) },
+    });
+
+    const { readContract } = await import('@/lib/soroban');
+    const value = await readContract({ contractId: CONTRACT, method: 'get_total' });
+
+    expect(value).toBe(42);
+  });
+
+  it('never fetches the source account, so reads work unfunded', async () => {
+    const { nativeToScVal } = await import('@stellar/stellar-sdk');
+    getAccountMock.mockClear();
+    simulateTransactionMock.mockResolvedValueOnce({
+      result: { retval: nativeToScVal(0, { type: 'u32' }) },
+    });
+
+    const { readContract } = await import('@/lib/soroban');
+    await readContract({ contractId: CONTRACT, method: 'get_total' });
+
+    expect(getAccountMock).not.toHaveBeenCalled();
+  });
+
+  it('returns undefined when the function returns void', async () => {
+    simulateTransactionMock.mockResolvedValueOnce({ result: undefined });
+
+    const { readContract } = await import('@/lib/soroban');
+    const value = await readContract({ contractId: CONTRACT, method: 'noop' });
+
+    expect(value).toBeUndefined();
+  });
+
+  it('throws the simulation error when the contract rejects the call', async () => {
+    simulateTransactionMock.mockResolvedValueOnce({
+      error: 'HostError: Error(Contract, #1)',
+    });
+
+    const { readContract } = await import('@/lib/soroban');
+
+    await expect(
+      readContract({ contractId: CONTRACT, method: 'get_circle' })
+    ).rejects.toThrow('Error(Contract, #1)');
   });
 });
