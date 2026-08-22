@@ -40,6 +40,8 @@ pub struct MemberInfo {
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CircleState {
+    pub name: Symbol,
+    pub cycle_duration: u32,
     pub admin: Address,
     pub token: Address,
     pub contribution_amount: i128,
@@ -101,10 +103,12 @@ impl CircleCoreContract {
     pub fn initialize(
         env: Env,
         circle_id: Symbol,
+        name: Symbol,
         admin: Address,
         token: Address,
         max_members: u32,
         contribution_amount: i128,
+        cycle_duration: u32,
     ) -> Result<(), CircleError> {
         admin.require_auth();
 
@@ -125,6 +129,8 @@ impl CircleCoreContract {
         }
 
         let circle = CircleState {
+            name,
+            cycle_duration,
             admin,
             token,
             contribution_amount,

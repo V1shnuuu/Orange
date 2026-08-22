@@ -10,6 +10,7 @@ use soroban_sdk::{
 const SEATS: u32 = 3;
 const CONTRIBUTION: i128 = 50_000_000;
 const MINT_AMOUNT: i128 = 500_000_000;
+const DURATION_DAYS: u32 = 7;
 
 struct Harness {
     env: Env,
@@ -56,10 +57,12 @@ impl Harness {
         let circle_id = self.id(name);
         self.client().initialize(
             &circle_id,
+            &self.id("TestCircle"),
             &self.admin,
             &self.token,
             &SEATS,
             &CONTRIBUTION,
+            &DURATION_DAYS,
         );
         circle_id
     }
@@ -99,6 +102,14 @@ fn test_initialize_sets_cycle_defaults() {
 
     assert_eq!(h.client().get_contribution_amount(&circle_id), CONTRIBUTION);
     assert_eq!(h.client().get_members(&circle_id).len(), 0);
+
+    // Display metadata lives with the circle, so the app needs one contract.
+    let circle = h.client().get_circle(&circle_id).unwrap();
+    assert_eq!(circle.name, h.id("TestCircle"));
+    assert_eq!(circle.cycle_duration, DURATION_DAYS);
+    assert_eq!(circle.admin, h.admin);
+    assert_eq!(circle.token, h.token);
+    assert_eq!(circle.total_contributed, 0);
 }
 
 #[test]
@@ -108,10 +119,12 @@ fn test_duplicate_circle_id_rejected() {
 
     let result = h.client().try_initialize(
         &circle_id,
+        &h.id("TestCircle"),
         &h.admin,
         &h.token,
         &SEATS,
         &CONTRIBUTION,
+        &DURATION_DAYS,
     );
     assert_eq!(result, Err(Ok(CircleError::CircleAlreadyExists)));
 }
@@ -122,10 +135,12 @@ fn test_initialize_rejects_non_positive_contribution() {
 
     let result = h.client().try_initialize(
         &h.id("alpha"),
+        &h.id("TestCircle"),
         &h.admin,
         &h.token,
         &SEATS,
         &0,
+        &DURATION_DAYS,
     );
     assert_eq!(result, Err(Ok(CircleError::InvalidAmount)));
 }
@@ -137,10 +152,12 @@ fn test_initialize_rejects_out_of_range_seat_counts() {
     for seats in [0u32, 1, 21, 100] {
         let result = h.client().try_initialize(
             &h.id("alpha"),
+            &h.id("TestCircle"),
             &h.admin,
             &h.token,
             &seats,
             &CONTRIBUTION,
+            &DURATION_DAYS,
         );
         assert_eq!(result, Err(Ok(CircleError::InvalidMemberCount)));
     }
@@ -475,10 +492,24 @@ fn test_circles_can_use_different_contribution_amounts() {
     let cheap = h.id("cheap");
     let pricey = h.id("pricey");
 
-    h.client()
-        .initialize(&cheap, &h.admin, &h.token, &SEATS, &CONTRIBUTION);
-    h.client()
-        .initialize(&pricey, &h.admin, &h.token, &SEATS, &(CONTRIBUTION * 2));
+    h.client().initialize(
+        &cheap,
+        &h.id("Cheap"),
+        &h.admin,
+        &h.token,
+        &SEATS,
+        &CONTRIBUTION,
+        &DURATION_DAYS,
+    );
+    h.client().initialize(
+        &pricey,
+        &h.id("Pricey"),
+        &h.admin,
+        &h.token,
+        &SEATS,
+        &(CONTRIBUTION * 2),
+        &DURATION_DAYS,
+    );
 
     assert_eq!(h.client().get_contribution_amount(&cheap), CONTRIBUTION);
     assert_eq!(
