@@ -35,14 +35,21 @@ export const CIRCLE_FACTORY_METHODS = {
 export const CIRCLE_CORE_METHODS = {
   INITIALIZE: 'initialize',
   JOIN_CIRCLE: 'join_circle',
+  LEAVE_CIRCLE: 'leave_circle',
   CONTRIBUTE: 'contribute',
+  GET_CIRCLE: 'get_circle',
   GET_CYCLE_INFO: 'get_cycle_info',
   GET_MEMBERS: 'get_members',
   GET_MEMBER_INFO: 'get_member_info',
   GET_CONTRIBUTION_AMOUNT: 'get_contribution_amount',
+  LIST_CIRCLES: 'list_circles',
 } as const;
 
 export const REPUTATION_METHODS = {
+  INITIALIZE: 'initialize',
+  AUTHORIZE_WRITER: 'authorize_writer',
+  REVOKE_WRITER: 'revoke_writer',
+  IS_WRITER: 'is_writer',
   RECORD_CIRCLE_JOINED: 'record_circle_joined',
   UPDATE_SCORE: 'update_score',
   GET_SCORE: 'get_score',

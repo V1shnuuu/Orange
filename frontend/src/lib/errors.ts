@@ -43,14 +43,22 @@ const FACTORY_ERROR_MESSAGES: Record<number, string> = {
   3: 'A circle with this ID already exists. Choose a different name.',
 };
 
+// Maps ReputationError enum codes to human-readable messages
+const REPUTATION_ERROR_MESSAGES: Record<number, string> = {
+  1: 'The reputation registry has not been initialized.',
+  2: 'The reputation registry is already initialized.',
+  3: 'Not authorized to write reputation scores.',
+};
+
 /** Which contract an error code should be read against. */
-export type ContractKind = 'split' | 'vault' | 'circle' | 'factory';
+export type ContractKind = 'split' | 'vault' | 'circle' | 'factory' | 'reputation';
 
 const CONTRACT_ERROR_MESSAGES: Record<ContractKind, Record<number, string>> = {
   split: SPLIT_ERROR_MESSAGES,
   vault: VAULT_ERROR_MESSAGES,
   circle: CIRCLE_ERROR_MESSAGES,
   factory: FACTORY_ERROR_MESSAGES,
+  reputation: REPUTATION_ERROR_MESSAGES,
 };
 
 export type ErrorType =
