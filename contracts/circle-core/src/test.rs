@@ -509,3 +509,104 @@ fn test_list_circles_enumerates_every_opened_circle() {
     assert_eq!(ids.get(0).unwrap(), h.id("alpha"));
     assert_eq!(ids.get(2).unwrap(), h.id("gamma"));
 }
+
+// --- leaving a circle before it starts ---
+
+#[test]
+fn test_member_can_leave_before_the_circle_starts() {
+    let h = Harness::new();
+    let circle_id = h.open("alpha");
+
+    let stayer = h.wallet();
+    let leaver = h.wallet();
+    h.client().join_circle(&circle_id, &stayer);
+    h.client().join_circle(&circle_id, &leaver);
+    assert_eq!(h.client().get_members(&circle_id).len(), 2);
+
+    h.client().leave_circle(&circle_id, &leaver);
+
+    let members = h.client().get_members(&circle_id);
+    assert_eq!(members.len(), 1);
+    assert_eq!(members.get(0).unwrap(), stayer);
+    assert_eq!(h.client().get_member_info(&circle_id, &leaver), None);
+}
+
+#[test]
+fn test_a_freed_seat_can_be_taken_by_someone_else() {
+    let h = Harness::new();
+    let circle_id = h.open("alpha");
+
+    let leaver = h.wallet();
+    h.client().join_circle(&circle_id, &leaver);
+    h.client().leave_circle(&circle_id, &leaver);
+
+    // The circle fills with three other wallets and starts as normal.
+    let members = h.fill(&circle_id);
+    assert_eq!(h.client().get_members(&circle_id).len(), SEATS);
+    assert_eq!(
+        h.client().get_cycle_info(&circle_id).unwrap().started,
+        true
+    );
+    assert_eq!(members.len(), SEATS);
+}
+
+#[test]
+fn test_leaving_then_rejoining_is_allowed() {
+    let h = Harness::new();
+    let circle_id = h.open("alpha");
+    let wallet = h.wallet();
+
+    h.client().join_circle(&circle_id, &wallet);
+    h.client().leave_circle(&circle_id, &wallet);
+    h.client().join_circle(&circle_id, &wallet);
+
+    assert_eq!(h.client().get_members(&circle_id).len(), 1);
+    assert!(h.client().get_member_info(&circle_id, &wallet).is_some());
+}
+
+#[test]
+fn test_leaving_a_started_circle_rejected() {
+    let h = Harness::new();
+    let circle_id = h.open("alpha");
+    let members = h.fill(&circle_id);
+
+    // Seats are committed once the pot size is fixed.
+    assert_eq!(
+        h.client().try_leave_circle(&circle_id, &members.get(0).unwrap()),
+        Err(Ok(CircleError::CircleAlreadyStarted))
+    );
+    assert_eq!(h.client().get_members(&circle_id).len(), SEATS);
+}
+
+#[test]
+fn test_leaving_rejects_non_members_and_unknown_circles() {
+    let h = Harness::new();
+    let circle_id = h.open("alpha");
+    let outsider = h.wallet();
+
+    assert_eq!(
+        h.client().try_leave_circle(&circle_id, &outsider),
+        Err(Ok(CircleError::NotMember))
+    );
+    assert_eq!(
+        h.client().try_leave_circle(&h.id("ghost"), &outsider),
+        Err(Ok(CircleError::CircleNotFound))
+    );
+}
+
+#[test]
+fn test_leaving_one_circle_leaves_membership_of_another_intact() {
+    let h = Harness::new();
+    let alpha = h.open("alpha");
+    let beta = h.open("beta");
+
+    let wallet = h.wallet();
+    h.client().join_circle(&alpha, &wallet);
+    h.client().join_circle(&beta, &wallet);
+
+    h.client().leave_circle(&alpha, &wallet);
+
+    assert_eq!(h.client().get_member_info(&alpha, &wallet), None);
+    assert!(h.client().get_member_info(&beta, &wallet).is_some());
+    assert_eq!(h.client().get_members(&beta).len(), 1);
+}

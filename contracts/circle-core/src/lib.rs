@@ -193,6 +193,44 @@ impl CircleCoreContract {
         Ok(true)
     }
 
+    /// Give up a seat before the circle starts.
+    ///
+    /// Without this a member of a circle that never fills is stuck in it for
+    /// good, since a started circle is the only thing that ever clears a seat.
+    /// Once a circle has started the seat is committed and this is refused —
+    /// members are already relying on the pot being a fixed size.
+    pub fn leave_circle(env: Env, circle_id: Symbol, member: Address) -> Result<bool, CircleError> {
+        member.require_auth();
+
+        let mut circle = load_circle(&env, &circle_id)?;
+
+        if circle.started || circle.completed {
+            return Err(CircleError::CircleAlreadyStarted);
+        }
+
+        let member_key = DataKey::Member(circle_id.clone(), member.clone());
+        if !env.storage().persistent().has(&member_key) {
+            return Err(CircleError::NotMember);
+        }
+
+        let mut remaining = Vec::new(&env);
+        for seat in circle.members.iter() {
+            if seat != member {
+                remaining.push_back(seat);
+            }
+        }
+        circle.members = remaining;
+
+        env.storage().persistent().remove(&member_key);
+
+        let left = circle.members.len();
+        save_circle(&env, &circle_id, &circle);
+
+        env.events()
+            .publish((symbol_short!("left"), circle_id, member), left);
+        Ok(true)
+    }
+
     pub fn contribute(
         env: Env,
         circle_id: Symbol,
