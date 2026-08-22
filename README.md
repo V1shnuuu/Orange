@@ -21,11 +21,12 @@ Contracts deployed on Stellar testnet:
 - circle-core: [CDKN4ZKKEH2CVHOJ36QKSTYFMISMHUJSDAWK2SCISDAD3W2PQPNDAR3W](https://stellar.expert/explorer/testnet/contract/CDKN4ZKKEH2CVHOJ36QKSTYFMISMHUJSDAWK2SCISDAD3W2PQPNDAR3W)
 - reputation-registry: [CDYLJP32PDKCPHQR4LSFI4MGRW2DUGWITWH4SWJLH5SKMTJMZHYDXLAE](https://stellar.expert/explorer/testnet/contract/CDYLJP32PDKCPHQR4LSFI4MGRW2DUGWITWH4SWJLH5SKMTJMZHYDXLAE)
 
-> The deployed `circle-core` and `reputation-registry` builds lag this repo.
-> `circle-core.initialize` now takes the circle's fixed contribution amount and
-> `contribute` rejects any other figure; `reputation-registry` gained a
-> `record_circle_joined` entry point. Both need redeploying before the addresses
-> above match the source. `circle-factory` is unchanged and matches.
+> **The deployed `circle-core` and `reputation-registry` are older builds and
+> the app will not work against them.** Both were rewritten: `circle-core` is
+> now multi-tenant, so one deployment backs many circles, and every entry point
+> takes a `circle_id`; `reputation-registry` now requires an admin and an
+> authorized writer. Redeploy both and update the contract ids before using the
+> app — see [Deploying the contracts](#deploying-the-contracts).
 
 Midnight: `contracts/CirclePact.compact` compiles against the Compact standard
 library and its artifacts are checked into `managed/`, but it is not deployed to
@@ -33,17 +34,26 @@ a live Midnight network.
 
 ## Features
 
-- **Five Soroban contracts** (`soroban-sdk` 22): `circle-factory` registers
-  circles per admin, `circle-core` runs the ROSCA cycle engine, and
-  `reputation-registry` tracks per-member scores. `split-registry` and
-  `payment-vault` implement a separate payment-splitting flow.
-- **Fixed-amount cycle engine.** The per-cycle contribution is set at
-  `initialize` and `contribute` rejects anything else, so the pot always equals
-  `contribution x member_count`. A circle auto-starts once it fills, and payouts
-  rotate in join order until every member has been paid once.
-- **Reputation scoring.** Successful, late, and defaulted cycles feed a
-  completion rate and badge tiers (Bronze → Diamond). A single default clears a
-  member's badge.
+- **Five Soroban contracts** (`soroban-sdk` 22): `circle-core` runs the ROSCA
+  cycle engine and holds the funds, `reputation-registry` tracks per-member
+  scores, `circle-factory` keeps a per-admin circle registry. `split-registry`
+  and `payment-vault` implement a separate payment-splitting flow.
+- **Multi-tenant circles.** State is keyed by `circle_id`, so one `circle-core`
+  deployment backs any number of concurrent circles and a wallet can belong to
+  several at once.
+- **Fixed-amount cycle engine.** The per-cycle contribution is set when the
+  circle is opened and `contribute` rejects anything else, so the pot always
+  equals `contribution x member_count`. A circle auto-starts once it fills, and
+  payouts rotate in join order until every member has been paid once.
+- **Seats can be given up.** `leave_circle` frees a seat while the circle is
+  still filling, so a circle one member short is recoverable rather than dead.
+- **Reputation scoring, write-protected.** Successful, late, and defaulted
+  cycles feed a completion rate and badge tiers (Bronze → Diamond); a single
+  default clears a member's badge. Only addresses on an admin-managed writer
+  allowlist can record scores, so a wallet cannot inflate its own standing.
+- **Feedback that is actually delivered.** `POST /api/feedback` validates a
+  submission and forwards it to a configured webhook, reporting failure rather
+  than showing a false confirmation.
 - **Wallet onboarding** through `@creit.tech/stellar-wallets-kit`, loaded
   dynamically so the kit is only fetched when a user connects.
 - **Full transaction lifecycle in the UI** — simulate, sign, submit, poll for
@@ -56,9 +66,9 @@ a live Midnight network.
 
 ## Workflow
 
-How a circle creation travels from the browser to the chain. Solid edges are
-live today; dashed edges are contracts that exist and are tested but are not yet
-called from the frontend (see [Current limitations](#current-limitations)).
+How a circle action travels from the browser to the chain. Creating, joining,
+leaving and contributing all take this path — each is a wallet-signed
+transaction against `circle-core`.
 
 ```mermaid
 flowchart TD
@@ -92,9 +102,10 @@ flowchart TD
     Invoke -->|"on failure"| Errors
     Errors --> Pages
 
-    RPC -->|"create_circle"| Factory
-    RPC -.->|"not wired yet"| Core
+    RPC -->|"initialize . join . leave . contribute"| Core
+    RPC -->|"read: list_circles . get_circle"| Core
     RPC -.->|"not wired yet"| Rep
+    RPC -.->|"not on the app's path"| Factory
 ```
 
 ## Installation
@@ -142,18 +153,35 @@ cargo test --all                                    # unit tests for all five cr
 cargo build --target wasm32-unknown-unknown --release  # deployable wasm
 ```
 
-Once the app is running: connect a wallet, then **Create Circle** builds a real
-`circle-factory.create_circle` transaction — simulated, signed in your wallet,
-submitted to testnet, and polled until confirmation. The returned hash is stored
-on the circle and the UI marks it as on-chain. If the account has never been
-funded, the error path offers a Friendbot link to fund it with test XLM.
+Once the app is running, connect a wallet. Every circle action is a real
+transaction — simulated, signed in your wallet, submitted to testnet, and polled
+until confirmation:
+
+| Action | Contract call |
+|--------|---------------|
+| Create a circle | `initialize`, then `join_circle` to take the first seat |
+| Join an open circle | `join_circle` |
+| Give up a seat before the circle starts | `leave_circle` |
+| Pay into the current cycle | `contribute` |
+
+The circle list and dashboard are read straight from the chain with
+`list_circles` and `get_circle`, which simulate without signing and work with no
+wallet connected. A circle auto-starts once every seat is taken; when all
+members have paid into a cycle the pot transfers to the next member in join
+order.
+
+If the account has never been funded, the error path offers a Friendbot link to
+fund it with test XLM.
 
 ## Configuration
 
-The frontend reads these at build time. `frontend/.env.example` is a starting
-point but is incomplete: it covers the network settings and the split/vault
-contract IDs, so the three circle contract IDs and `NEXT_PUBLIC_SITE_URL` need
-adding by hand.
+`frontend/.env.example` lists all of these. `NEXT_PUBLIC_CIRCLE_CORE_CONTRACT_ID`
+and `NEXT_PUBLIC_USDC_TOKEN_CONTRACT_ID` are the two the circle flow cannot work
+without.
+
+The live demo currently serves from `https://orange-ten-lac.vercel.app/`, so set
+`NEXT_PUBLIC_SITE_URL` to match — otherwise `robots.txt` and `sitemap.xml`
+advertise the old default.
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
@@ -167,6 +195,7 @@ adding by hand.
 | `NEXT_PUBLIC_PAYMENT_VAULT_CONTRACT_ID` | empty | payment-vault address |
 | `NEXT_PUBLIC_USDC_TOKEN_CONTRACT_ID` | empty | Token contract moved by `contribute` |
 | `NEXT_PUBLIC_SITE_URL` | `https://circlepact-mvp.vercel.app` | Canonical origin for `robots.txt` and `sitemap.xml` |
+| `FEEDBACK_WEBHOOK_URL` | unset | Server-side only. Where `/api/feedback` forwards submissions; unset makes the route return 503 |
 
 Set `NEXT_PUBLIC_SITE_URL` per deployment so preview builds advertise themselves
 rather than pointing crawlers at production.
@@ -201,15 +230,15 @@ Vercel deploys additionally need `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and
 
 ## Testing and CI
 
-Verified locally on 2026-08-19:
+Verified locally on 2026-08-21:
 
-- `cargo test --all` in `contracts/` — **40 tests** across the five crates
-- `npm run test` in `frontend/` — **84 tests** across 11 files
+- `cargo test --all` in `contracts/` — **59 tests** across the five crates
+- `cargo build --target wasm32-unknown-unknown --release` — all five crates
+- `npm run test` in `frontend/` — **91 tests** across 11 files
 - `npm run type-check` — clean
-- `npm run lint` — 0 errors, 2 unused-parameter warnings in the not-yet-wired
-  `contributeToCircle` stub
-- `npm run build` — 12 routes, including the generated `/robots.txt` and
-  `/sitemap.xml`
+- `npm run lint` — clean
+- `npm run build` — 13 routes, including `/api/feedback` and the generated
+  `/robots.txt` and `/sitemap.xml`
 
 Every one of those is gated in [.github/workflows/ci.yml](.github/workflows/ci.yml):
 
@@ -223,27 +252,60 @@ flowchart LR
     Gate -->|"push to main"| Prod["deploy-production<br>vercel deploy --prebuilt --prod"]
 ```
 
+## Deploying the contracts
+
+The contracts in this repo are ahead of what is deployed, and the app talks to
+`circle-core` for everything, so it needs a fresh deployment before it works.
+With the [Stellar CLI](https://developers.stellar.org/docs/tools/developer-tools/cli/stellar-cli)
+and a funded testnet identity:
+
+```bash
+cd contracts
+cargo build --target wasm32-unknown-unknown --release
+
+# circle-core — the only contract the circle flow needs
+stellar contract deploy \
+  --wasm target/wasm32-unknown-unknown/release/circle_core.wasm \
+  --source <identity> --network testnet
+
+# reputation-registry, then point it at circle-core as its writer
+stellar contract deploy \
+  --wasm target/wasm32-unknown-unknown/release/reputation_registry.wasm \
+  --source <identity> --network testnet
+
+stellar contract invoke --id <reputation-id> --source <identity> \
+  --network testnet -- initialize --admin <your-address>
+
+stellar contract invoke --id <reputation-id> --source <identity> \
+  --network testnet -- authorize_writer --writer <circle-core-id>
+```
+
+Then set `NEXT_PUBLIC_CIRCLE_CORE_CONTRACT_ID`,
+`NEXT_PUBLIC_REPUTATION_REGISTRY_CONTRACT_ID` and
+`NEXT_PUBLIC_USDC_TOKEN_CONTRACT_ID` in the Vercel project and redeploy the
+frontend. `contribute` moves a real token, so the token contract must be one
+members actually hold — issue a test asset and distribute it, or point at an
+existing testnet asset.
+
 ## Current limitations
 
 Worth knowing before reading the code:
 
-- **Circle creation is on-chain; joining and contributing are not.**
-  `useCircleContracts.createCircle()` submits a real testnet transaction. Joining
-  and contributing are still tracked in React state, because the deployed
-  `circle-core` is a single-instance contract — it holds exactly one circle's
-  worth of state and was never initialized — while `circle-factory` never
-  deploys a fresh `circle-core` per circle. Supporting concurrent circles needs
-  either a per-circle deployment step or a multi-tenant rewrite of
-  `circle-core`, plus a real test token for `contribute()` to move. The UI
-  labels which parts of a circle are on-chain.
+- **The deployed contract addresses in this README are stale.** Nothing works
+  against them; see above.
+- **`reputation-registry` is not called from the app yet.** The contract is
+  written, authorized and tested, but `circle-core` does not yet report cycle
+  outcomes to it, so badges shown in the UI are not driven by real scores.
 - **The `/splits` pages are UI-only.** `split-registry` and `payment-vault` are
   implemented and tested, but nothing in the frontend invokes them;
   `useDistributionEvents` returns generated events.
-- **`reputation-registry.update_score` has no authorization.** Any caller can
-  write any member's score. It needs restricting to the factory/core contracts
-  before this goes near mainnet.
-- **In-app feedback is not persisted.** `FeedbackModal` logs to the console; it
-  needs an API route or webhook before it collects anything.
+- **`circle-factory` is no longer on the app's path.** `circle-core` carries the
+  circle's name and cycle duration itself, so creating a circle is one contract
+  and one signature. The factory keeps its own registry and tests.
+- **A late or defaulting member cannot be handled.** A cycle only closes when
+  every member pays, so one member who stops paying stalls the circle with the
+  others' funds held in the contract. There is no timeout, eviction, or refund
+  path yet — this is the most important gap before real money.
 
 ## Screenshots
 
