@@ -1,23 +1,31 @@
 #![no_std]
 
 use soroban_sdk::{
-    contract, contractimpl, contracttype, contracterror, symbol_short, token, Address, Env, Symbol, Vec, log
+    contract, contracterror, contractimpl, contracttype, symbol_short, token, Address, Env, Symbol,
+    Vec,
 };
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u32)]
 pub enum CircleError {
-    NotInitialized = 1,
-    AlreadyInitialized = 2,
+    CircleNotFound = 1,
+    CircleAlreadyExists = 2,
     CircleFull = 3,
     AlreadyMember = 4,
     NotMember = 5,
     InvalidAmount = 6,
-    CycleNotComplete = 7,
+    CircleNotStarted = 7,
     AlreadyContributed = 8,
     CircleAlreadyStarted = 9,
+    InvalidMemberCount = 10,
 }
+
+/// A circle needs at least two members to rotate a pot between, and the
+/// members vector is read and rewritten on every contribution, so the upper
+/// bound keeps that cost predictable.
+const MIN_MEMBERS: u32 = 2;
+const MAX_MEMBERS: u32 = 20;
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -27,21 +35,25 @@ pub struct MemberInfo {
     pub payouts_received: u32,
 }
 
+/// Everything one circle owns. Keyed by `circle_id`, so a single deployment
+/// backs any number of concurrent circles.
 #[contracttype]
-#[derive(Clone)]
-pub enum DataKey {
-    TokenId,
-    FactoryId,
-    CircleId,
-    Admin,
-    Members,
-    Member(Address),
-    ContributionAmount,
-    CycleInfo,
-    TotalContributed,
-    Initialized,
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CircleState {
+    pub admin: Address,
+    pub token: Address,
+    pub contribution_amount: i128,
+    pub members: Vec<Address>,
+    pub max_members: u32,
+    pub current_cycle: u32,
+    pub contributions_this_cycle: u32,
+    pub next_payout_index: u32,
+    pub started: bool,
+    pub completed: bool,
+    pub total_contributed: i128,
 }
 
+/// The subset of [`CircleState`] the dashboard polls for.
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CycleInfo {
@@ -50,200 +62,276 @@ pub struct CycleInfo {
     pub contributions_this_cycle: u32,
     pub next_payout_index: u32,
     pub started: bool,
+    pub completed: bool,
+}
+
+#[contracttype]
+#[derive(Clone)]
+pub enum DataKey {
+    /// CircleState for one circle.
+    Circle(Symbol),
+    /// MemberInfo, scoped to a circle so a wallet can be in many at once.
+    Member(Symbol, Address),
+    /// Every circle id this contract has opened, for enumeration.
+    CircleIds,
 }
 
 #[contract]
 pub struct CircleCoreContract;
 
+fn load_circle(env: &Env, circle_id: &Symbol) -> Result<CircleState, CircleError> {
+    env.storage()
+        .persistent()
+        .get(&DataKey::Circle(circle_id.clone()))
+        .ok_or(CircleError::CircleNotFound)
+}
+
+fn save_circle(env: &Env, circle_id: &Symbol, circle: &CircleState) {
+    env.storage()
+        .persistent()
+        .set(&DataKey::Circle(circle_id.clone()), circle);
+}
+
 #[contractimpl]
 impl CircleCoreContract {
+    /// Open a new circle under `circle_id`.
+    ///
+    /// Unlike the previous single-instance design, this may be called once per
+    /// circle against the same deployment.
     pub fn initialize(
         env: Env,
-        factory_id: Address,
-        token_id: Address,
         circle_id: Symbol,
         admin: Address,
+        token: Address,
         max_members: u32,
         contribution_amount: i128,
     ) -> Result<(), CircleError> {
-        if env.storage().instance().has(&DataKey::Initialized) {
-            return Err(CircleError::AlreadyInitialized);
+        admin.require_auth();
+
+        if env
+            .storage()
+            .persistent()
+            .has(&DataKey::Circle(circle_id.clone()))
+        {
+            return Err(CircleError::CircleAlreadyExists);
+        }
+
+        if !(MIN_MEMBERS..=MAX_MEMBERS).contains(&max_members) {
+            return Err(CircleError::InvalidMemberCount);
         }
 
         if contribution_amount <= 0 {
             return Err(CircleError::InvalidAmount);
         }
 
-        env.storage().instance().set(&DataKey::FactoryId, &factory_id);
-        env.storage().instance().set(&DataKey::TokenId, &token_id);
-        env.storage().instance().set(&DataKey::CircleId, &circle_id);
-        env.storage().instance().set(&DataKey::Admin, &admin);
-        env.storage().instance().set(&DataKey::ContributionAmount, &contribution_amount);
-        
-        env.storage().instance().set(&DataKey::Members, &Vec::<Address>::new(&env));
-        env.storage().instance().set(&DataKey::CycleInfo, &CycleInfo {
+        let circle = CircleState {
+            admin,
+            token,
+            contribution_amount,
+            members: Vec::new(&env),
+            max_members,
             current_cycle: 1,
-            max_cycles: max_members,
             contributions_this_cycle: 0,
             next_payout_index: 0,
             started: false,
-        });
-        
-        env.storage().instance().set(&DataKey::Initialized, &true);
+            completed: false,
+            total_contributed: 0,
+        };
+        save_circle(&env, &circle_id, &circle);
 
-        log!(&env, "CircleCore initialized");
+        let mut ids: Vec<Symbol> = env
+            .storage()
+            .persistent()
+            .get(&DataKey::CircleIds)
+            .unwrap_or(Vec::new(&env));
+        ids.push_back(circle_id.clone());
+        env.storage().persistent().set(&DataKey::CircleIds, &ids);
+
+        env.events()
+            .publish((symbol_short!("opened"), circle_id), max_members);
         Ok(())
     }
 
-    pub fn join_circle(env: Env, member: Address) -> Result<bool, CircleError> {
+    pub fn join_circle(env: Env, circle_id: Symbol, member: Address) -> Result<bool, CircleError> {
         member.require_auth();
-        
-        let mut cycle_info: CycleInfo = env.storage().instance().get(&DataKey::CycleInfo).unwrap();
-        if cycle_info.started {
-            return Err(CircleError::CircleAlreadyStarted);
-        }
 
-        let mut members: Vec<Address> = env.storage().instance().get(&DataKey::Members).unwrap();
-        if members.len() >= cycle_info.max_cycles {
+        let mut circle = load_circle(&env, &circle_id)?;
+
+        if circle.members.len() >= circle.max_members {
             return Err(CircleError::CircleFull);
         }
 
-        if env.storage().persistent().has(&DataKey::Member(member.clone())) {
+        if circle.started {
+            return Err(CircleError::CircleAlreadyStarted);
+        }
+
+        let member_key = DataKey::Member(circle_id.clone(), member.clone());
+        if env.storage().persistent().has(&member_key) {
             return Err(CircleError::AlreadyMember);
         }
 
-        members.push_back(member.clone());
-        env.storage().instance().set(&DataKey::Members, &members);
+        circle.members.push_back(member.clone());
+        env.storage().persistent().set(
+            &member_key,
+            &MemberInfo {
+                joined_at: env.ledger().timestamp(),
+                has_contributed_current: false,
+                payouts_received: 0,
+            },
+        );
 
-        let info = MemberInfo {
-            joined_at: env.ledger().timestamp(),
-            has_contributed_current: false,
-            payouts_received: 0,
-        };
-        env.storage().persistent().set(&DataKey::Member(member.clone()), &info);
-
-        // Auto-start if full
-        if members.len() == cycle_info.max_cycles {
-            cycle_info.started = true;
-            env.storage().instance().set(&DataKey::CycleInfo, &cycle_info);
+        // A circle starts the moment its last seat is taken.
+        if circle.members.len() == circle.max_members {
+            circle.started = true;
         }
 
-        env.events().publish((symbol_short!("joined"), member), members.len());
+        let joined = circle.members.len();
+        save_circle(&env, &circle_id, &circle);
+
+        env.events()
+            .publish((symbol_short!("joined"), circle_id, member), joined);
         Ok(true)
     }
 
-    pub fn contribute(env: Env, member: Address, amount: i128) -> Result<bool, CircleError> {
+    pub fn contribute(
+        env: Env,
+        circle_id: Symbol,
+        member: Address,
+        amount: i128,
+    ) -> Result<bool, CircleError> {
         member.require_auth();
 
+        let mut circle = load_circle(&env, &circle_id)?;
+
+        let member_key = DataKey::Member(circle_id.clone(), member.clone());
         let mut member_info: MemberInfo = env
             .storage()
             .persistent()
-            .get(&DataKey::Member(member.clone()))
+            .get(&member_key)
             .ok_or(CircleError::NotMember)?;
 
         if member_info.has_contributed_current {
             return Err(CircleError::AlreadyContributed);
         }
 
-        let mut cycle_info: CycleInfo = env.storage().instance().get(&DataKey::CycleInfo).unwrap();
-        if !cycle_info.started {
-            return Err(CircleError::NotInitialized); // Circle hasn't started yet
+        if !circle.started || circle.completed {
+            return Err(CircleError::CircleNotStarted);
         }
 
         // Every member of a ROSCA pays the same amount into each cycle. The pot
         // handed out below is priced off that figure, so an off-amount payment
         // would either short the recipient or overdraw the circle.
-        let contribution_amount: i128 = env
-            .storage()
-            .instance()
-            .get(&DataKey::ContributionAmount)
-            .unwrap();
-        if amount != contribution_amount {
+        if amount != circle.contribution_amount {
             return Err(CircleError::InvalidAmount);
         }
 
-        let token_id: Address = env.storage().instance().get(&DataKey::TokenId).unwrap();
-        let vault_address = env.current_contract_address();
-        let token_client = token::Client::new(&env, &token_id);
-        
-        // Transfer USDC
-        token_client.transfer(&member, &vault_address, &amount);
+        let vault = env.current_contract_address();
+        token::Client::new(&env, &circle.token).transfer(&member, &vault, &amount);
 
-        // Update state
         member_info.has_contributed_current = true;
-        env.storage().persistent().set(&DataKey::Member(member.clone()), &member_info);
+        env.storage().persistent().set(&member_key, &member_info);
 
-        cycle_info.contributions_this_cycle += 1;
-        
-        // Track Total
-        let total: i128 = env.storage().instance().get(&DataKey::TotalContributed).unwrap_or(0);
-        env.storage().instance().set(&DataKey::TotalContributed, &(total + amount));
+        circle.contributions_this_cycle += 1;
+        circle.total_contributed += amount;
 
-        env.events().publish((symbol_short!("contrib"), member.clone()), amount);
+        env.events()
+            .publish((symbol_short!("contrib"), circle_id.clone(), member), amount);
 
-        // Check for payout
-        let max_cycles = cycle_info.max_cycles;
-        if cycle_info.contributions_this_cycle == max_cycles {
-            Self::execute_payout(&env, &mut cycle_info, contribution_amount * max_cycles as i128)?;
-        } else {
-            env.storage().instance().set(&DataKey::CycleInfo, &cycle_info);
+        if circle.contributions_this_cycle == circle.max_members {
+            Self::execute_payout(&env, &circle_id, &mut circle);
         }
 
+        save_circle(&env, &circle_id, &circle);
         Ok(true)
     }
 
-    fn execute_payout(env: &Env, cycle_info: &mut CycleInfo, payout_amount: i128) -> Result<(), CircleError> {
-        let members: Vec<Address> = env.storage().instance().get(&DataKey::Members).unwrap();
-        let recipient = members.get(cycle_info.next_payout_index).unwrap();
-        
-        let token_id: Address = env.storage().instance().get(&DataKey::TokenId).unwrap();
-        let vault_address = env.current_contract_address();
-        let token_client = token::Client::new(env, &token_id);
-        
-        token_client.transfer(&vault_address, &recipient, &payout_amount);
+    /// Hand the full pot to the member whose turn it is, then reset the cycle.
+    fn execute_payout(env: &Env, circle_id: &Symbol, circle: &mut CircleState) {
+        let recipient = circle.members.get(circle.next_payout_index).unwrap();
+        let pot = circle.contribution_amount * circle.max_members as i128;
 
-        // Update Recipient Info
-        let mut rec_info: MemberInfo = env.storage().persistent().get(&DataKey::Member(recipient.clone())).unwrap();
-        rec_info.payouts_received += 1;
-        env.storage().persistent().set(&DataKey::Member(recipient.clone()), &rec_info);
+        let vault = env.current_contract_address();
+        token::Client::new(env, &circle.token).transfer(&vault, &recipient, &pot);
 
-        // Reset for next cycle
-        cycle_info.current_cycle += 1;
-        cycle_info.contributions_this_cycle = 0;
-        cycle_info.next_payout_index += 1;
+        let recipient_key = DataKey::Member(circle_id.clone(), recipient.clone());
+        let mut recipient_info: MemberInfo =
+            env.storage().persistent().get(&recipient_key).unwrap();
+        recipient_info.payouts_received += 1;
+        recipient_info.has_contributed_current = false;
+        env.storage()
+            .persistent()
+            .set(&recipient_key, &recipient_info);
 
-        // Reset member contributions
-        for i in 0..members.len() {
-            let m = members.get(i).unwrap();
-            let mut info: MemberInfo = env.storage().persistent().get(&DataKey::Member(m.clone())).unwrap();
+        // Clear every other member's flag for the next cycle.
+        for member in circle.members.iter() {
+            if member == recipient {
+                continue;
+            }
+            let key = DataKey::Member(circle_id.clone(), member);
+            let mut info: MemberInfo = env.storage().persistent().get(&key).unwrap();
             info.has_contributed_current = false;
-            env.storage().persistent().set(&DataKey::Member(m.clone()), &info);
+            env.storage().persistent().set(&key, &info);
         }
 
-        if cycle_info.current_cycle > cycle_info.max_cycles {
-            cycle_info.started = false; // Circle complete
+        circle.current_cycle += 1;
+        circle.contributions_this_cycle = 0;
+        circle.next_payout_index += 1;
+
+        // Every member has been paid once — the circle is done.
+        if circle.next_payout_index >= circle.max_members {
+            circle.started = false;
+            circle.completed = true;
         }
-        
-        env.storage().instance().set(&DataKey::CycleInfo, cycle_info);
-        env.events().publish((symbol_short!("payout"), recipient), payout_amount);
 
-        Ok(())
+        env.events()
+            .publish((symbol_short!("payout"), circle_id.clone(), recipient), pot);
     }
 
-    pub fn get_cycle_info(env: Env) -> CycleInfo {
-        env.storage().instance().get(&DataKey::CycleInfo).unwrap()
+    pub fn get_circle(env: Env, circle_id: Symbol) -> Option<CircleState> {
+        env.storage().persistent().get(&DataKey::Circle(circle_id))
     }
 
-    pub fn get_contribution_amount(env: Env) -> i128 {
-        env.storage().instance().get(&DataKey::ContributionAmount).unwrap_or(0)
+    pub fn get_cycle_info(env: Env, circle_id: Symbol) -> Option<CycleInfo> {
+        let circle: CircleState = env
+            .storage()
+            .persistent()
+            .get(&DataKey::Circle(circle_id))?;
+
+        Some(CycleInfo {
+            current_cycle: circle.current_cycle,
+            max_cycles: circle.max_members,
+            contributions_this_cycle: circle.contributions_this_cycle,
+            next_payout_index: circle.next_payout_index,
+            started: circle.started,
+            completed: circle.completed,
+        })
     }
 
-    pub fn get_members(env: Env) -> Vec<Address> {
-        env.storage().instance().get(&DataKey::Members).unwrap_or(Vec::new(&env))
+    pub fn get_members(env: Env, circle_id: Symbol) -> Vec<Address> {
+        match Self::get_circle(env.clone(), circle_id) {
+            Some(circle) => circle.members,
+            None => Vec::new(&env),
+        }
     }
 
-    pub fn get_member_info(env: Env, member: Address) -> Option<MemberInfo> {
-        env.storage().persistent().get(&DataKey::Member(member))
+    pub fn get_member_info(env: Env, circle_id: Symbol, member: Address) -> Option<MemberInfo> {
+        env.storage()
+            .persistent()
+            .get(&DataKey::Member(circle_id, member))
+    }
+
+    pub fn get_contribution_amount(env: Env, circle_id: Symbol) -> i128 {
+        Self::get_circle(env, circle_id)
+            .map(|c| c.contribution_amount)
+            .unwrap_or(0)
+    }
+
+    /// Every circle id this contract has opened, for the explore page.
+    pub fn list_circles(env: Env) -> Vec<Symbol> {
+        env.storage()
+            .persistent()
+            .get(&DataKey::CircleIds)
+            .unwrap_or(Vec::new(&env))
     }
 }
 

@@ -24,15 +24,16 @@ const VAULT_ERROR_MESSAGES: Record<number, string> = {
 
 // Maps CircleError enum codes to human-readable messages
 const CIRCLE_ERROR_MESSAGES: Record<number, string> = {
-  1: 'This circle has not started yet — it opens once every seat is filled.',
-  2: 'This circle has already been set up.',
+  1: 'Circle not found — it may not exist on-chain yet.',
+  2: 'A circle with this ID already exists. Choose a different name.',
   3: 'This circle is full — every seat has been taken.',
   4: 'You have already joined this circle.',
   5: 'Only members of this circle can contribute.',
   6: "Contribution must match the circle's fixed amount exactly.",
-  7: 'The current cycle is still open — not every member has contributed yet.',
+  7: 'This circle has not started yet — it opens once every seat is filled.',
   8: 'You have already contributed to this cycle.',
   9: 'This circle has already started and is no longer accepting members.',
+  10: 'A circle needs between 2 and 20 members.',
 };
 
 // Maps FactoryError enum codes to human-readable messages

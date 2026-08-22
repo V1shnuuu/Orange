@@ -66,7 +66,7 @@ describe('decodeContractError', () => {
   });
 
   it('decodes every circle error code', () => {
-    for (let code = 1; code <= 9; code++) {
+    for (let code = 1; code <= 10; code++) {
       expect(decodeContractError(code, 'circle')).not.toContain('Unknown');
     }
   });
